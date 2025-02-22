@@ -1,0 +1,11 @@
+---
+description: Keeping code clean
+globs: 
+---
+
+When working with backend code you should first review the code in the api/backend diectory
+- Before writing any code, check the helper functions iin the api/backend/utils directory to see if there are exsiting code that one could use too keep the code DRY
+
+When working with frontend code you should first review the code in the web/frontend diectory 
+
+
