@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
@@ -19,23 +19,16 @@ const ProfilePage = () => {
   const { register, handleSubmit, setValue } = useForm();
 
   useEffect(() => {
+    console.log('user', user);
+    console.log('user.name', user?.name);
     if (!user) {
       router.push('/login');
+    } else {
+      // Prepopulate form fields with user data
+      setValue('name', user?.name);
+      setValue('email', user?.email);
     }
-  }, [user, router]);
-
-  const { data: profileData, isLoading } = useQuery({
-    queryKey: ['userProfile'],
-    queryFn: () => apiClient('/user/profile').then((response: any) => response.json()),
-  });
-
-  // Set form values when profile data is loaded
-  useEffect(() => {
-    if (profileData) {
-      setValue('name', profileData.name);
-      setValue('email', profileData.email);
-    }
-  }, [profileData, setValue]);
+  }, [user, router, setValue]);
 
   const updateProfile = useMutation({
     mutationFn: (data: any) => apiClient('/user/update', {
@@ -44,11 +37,9 @@ const ProfilePage = () => {
       body: JSON.stringify(data),
     }).then((response: any) => response.json()),
     onSuccess: () => {
-      // Show success message or handle successful update
       console.log('Profile updated successfully');
     },
     onError: (error) => {
-      // Handle error
       console.error('Failed to update profile:', error);
     }
   });
@@ -60,11 +51,9 @@ const ProfilePage = () => {
       body: JSON.stringify(data),
     }).then((response: any) => response.json()),
     onSuccess: () => {
-      // Show success message or handle successful password change
       console.log('Password changed successfully');
     },
     onError: (error) => {
-      // Handle error
       console.error('Failed to change password:', error);
     }
   });
@@ -78,12 +67,11 @@ const ProfilePage = () => {
   };
 
   if (!user) return null;
-  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6 text-center">Profile Settings</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">{user?.name} | Profile Settings</h2>
         <form onSubmit={handleSubmit(onSubmitProfile)} className="mb-6">
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
