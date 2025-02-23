@@ -19,8 +19,6 @@ const ProfilePage = () => {
   const { register, handleSubmit, setValue } = useForm();
 
   useEffect(() => {
-    console.log('user', user);
-    console.log('user.name', user?.name);
     if (!user) {
       router.push('/login');
     } else {
