@@ -54,4 +54,18 @@ export class AuthService {
     if (!payload) throw new Error('Invalid Google token');
     return { email: payload.email, id: payload.sub };
   }
+
+  async getUserInfo(userId: string) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('id, email, role, subscriptionType, subscriptionStatus')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
 }

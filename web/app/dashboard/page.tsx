@@ -15,7 +15,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (!user) {
-      apiClient('/api/user').then((response: any) => response.json()).then((data) => {
+      apiClient('/auth/me').then((response: any) => response.json()).then((data) => {
         if (data) {
           setUser(data);
         }

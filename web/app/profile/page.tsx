@@ -16,6 +16,7 @@ import { apiClient } from '@/utils/apiClient';
 const ProfilePage = () => {
   const { user } = useAuthStore();
   const router = useRouter();
+  const { register, handleSubmit, setValue } = useForm();
 
   useEffect(() => {
     if (!user) {
@@ -23,37 +24,50 @@ const ProfilePage = () => {
     }
   }, [user, router]);
 
-  if (!user) {
-    return null;
-  }
-
-  const { register, handleSubmit } = useForm();
-
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => apiClient('/user/profile').then((response: any) => response.json()),
   });
+
+  // Set form values when profile data is loaded
+  useEffect(() => {
+    if (profileData) {
+      setValue('name', profileData.name);
+      setValue('email', profileData.email);
+    }
+  }, [profileData, setValue]);
+
   const updateProfile = useMutation({
     mutationFn: (data: any) => apiClient('/user/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then((response: any) => response.json()),
+    onSuccess: () => {
+      // Show success message or handle successful update
+      console.log('Profile updated successfully');
+    },
+    onError: (error) => {
+      // Handle error
+      console.error('Failed to update profile:', error);
+    }
   });
+
   const changePassword = useMutation({
     mutationFn: (data: any) => apiClient('/user/change-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then((response: any) => response.json()),
+    onSuccess: () => {
+      // Show success message or handle successful password change
+      console.log('Password changed successfully');
+    },
+    onError: (error) => {
+      // Handle error
+      console.error('Failed to change password:', error);
+    }
   });
-
-  type ProfileData = {
-    name: string;
-    email: string;
-  };
-
-  const profileDataTyped = profileData as ProfileData;
 
   const onSubmitProfile = (data: any) => {
     updateProfile.mutate(data);
@@ -63,6 +77,7 @@ const ProfilePage = () => {
     changePassword.mutate(data);
   };
 
+  if (!user) return null;
   if (isLoading) return <div>Loading...</div>;
 
   return (
@@ -75,7 +90,6 @@ const ProfilePage = () => {
             <input
               id="name"
               type="text"
-              defaultValue={profileDataTyped?.name}
               {...register('name', { required: true })}
               className="px-3 py-2 mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -85,7 +99,6 @@ const ProfilePage = () => {
             <input
               id="email"
               type="email"
-              defaultValue={profileDataTyped?.email}
               {...register('email', { required: true })}
               className="px-3 py-2 mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -99,7 +112,13 @@ const ProfilePage = () => {
               className="px-3 py-2 mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md">Update Profile</button>
+          <button 
+            type="submit" 
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
+            disabled={updateProfile.isPending}
+          >
+            {updateProfile.isPending ? 'Updating...' : 'Update Profile'}
+          </button>
         </form>
         <form onSubmit={handleSubmit(onSubmitPassword)}>
           <h3 className="text-xl font-bold mb-4">Change Password</h3>
@@ -121,7 +140,13 @@ const ProfilePage = () => {
               className="px-3 py-2 mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md">Change Password</button>
+          <button 
+            type="submit" 
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
+            disabled={changePassword.isPending}
+          >
+            {changePassword.isPending ? 'Changing Password...' : 'Change Password'}
+          </button>
         </form>
       </div>
     </div>
