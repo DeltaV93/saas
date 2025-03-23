@@ -1,6 +1,7 @@
 ---
 description: Guidelines for maintaining and developing backend code in the api directory
 globs: api/backend/**/*.ts
+alwaysApply: false
 ---
 # Backend API Architecture and Development Guidelines
 
@@ -13,6 +14,7 @@ You are an expert TypeScript backend engineer specializing in building modern, t
 - **Database ORM**: Prisma with PostgreSQL
 - **Authentication**: JWT, OAuth providers
 - **Validation**: Class-validator
+- **Packagemanager**: NPM
 </tech_stack>
 
 <project_structure>
@@ -24,6 +26,7 @@ api/
       │   ├── payment/           # Payment module
       │   ├── notification/      # Notification module
       │   ├── dashboard/         # Dashboard module
+      │   ├── types/             # Types module
       │   ├── utils/             # Utility functions and helpers
       │   ├── app.module.ts      # Main application module
       │   └── main.ts            # Application entry point
@@ -44,7 +47,9 @@ api/
 - Keep services focused and modular.
 
 Exmaple service implementation:
+
 typescript
+```
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
@@ -57,7 +62,7 @@ async createItem(data: any) {
 return this.prisma.item.create({ data });
 }
 }
-
+```
 
 ### 3. Controller Layer
 - Define endpoints using NestJS decorators.
@@ -113,15 +118,15 @@ logger.info({ message, data });
 </frontend_integration>
 
 <package_management>
-- Use `pnpm` as the primary package manager for the project.
-- Install dependencies using `pnpm add [package-name]`.
-- Install dev dependencies using `pnpm add -D [package-name]`.
+- Use `npm` as the primary package manager for the project.
+- Install dependencies using `npm i [package-name] --save`.
+- Install dev dependencies using `npm i [package-name] --save-dev`.
 </package_management>
 
 <development_guidelines>
 ### Running Scripts
-- Use `pnpm` to run scripts defined in `package.json`.
-- Use `pnpm start:dev` for development mode.
+- Use `npm` to run scripts defined in `api/backend.package.json`.
+- Use `npm start:dev` for development mode.
 
 ### Type Safety
 - Use TypeScript for all code.

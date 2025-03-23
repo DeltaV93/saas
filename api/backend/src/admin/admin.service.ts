@@ -26,7 +26,7 @@ export class AdminService {
   }
 
   createSupportTicket(userId: string, issue: string) {
-    const ticketId = `ticket-${Date.now()}`;
+    const ticketId = `ticket-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const ticket = { id: ticketId, userId, issue, status: 'open' };
     this.tickets.set(ticketId, ticket);
     return ticket;

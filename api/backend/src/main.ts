@@ -14,9 +14,9 @@ async function bootstrap() {
 
   // Set up Swagger
   const config = new DocumentBuilder()
-    .setTitle('API Documentation')
-    .setDescription('API documentation for the application')
-    .setVersion('1.0')
+    .setTitle('Template API Documentation')
+    .setDescription('API documentation for the template application')
+    .setVersion('0.0.1')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
@@ -58,7 +58,10 @@ async function bootstrap() {
       return `Request completed with status code ${res.statusCode}`;
     },
     customErrorMessage: (error, res) => {
-      return `Request failed with status code ${res.statusCode}: ${error.message}`;
+      if (error instanceof Error) {
+        return `Request failed with status code ${res.statusCode}: ${error.message}`;
+      }
+      return `Request failed with status code ${res.statusCode}`;
     },
   }));
 
