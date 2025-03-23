@@ -12,7 +12,7 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = () => {
-    apiClient('/api/auth/logout', {
+    apiClient('/auth/logout', {
       method: 'POST',
     })
       .then((response: any) => response.json())
@@ -56,7 +56,7 @@ const Navbar = () => {
             {user ? (
               <div className="relative">
                 <button onClick={toggleDropdown} onKeyDown={handleKeyDown} className="flex items-center text-gray-900" aria-haspopup="true" aria-expanded={isDropdownOpen} aria-label="User menu">
-                  <img className="h-8 w-8 rounded-full" src="/profile-icon.svg" alt="Profile" />
+                  <img className="h-8 w-8 rounded-full" src={user.profilePicture || '/profile-icon.svg'} alt="Profile" />
                   <svg className="ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>

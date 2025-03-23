@@ -14,7 +14,7 @@ import { apiClient } from '@/utils/apiClient';
  * - Protected route (redirects to login if not authenticated)
  */
 const ProfilePage = () => {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const router = useRouter();
   const { register, handleSubmit, setValue } = useForm();
 
@@ -29,13 +29,14 @@ const ProfilePage = () => {
   }, [user, router, setValue]);
 
   const updateProfile = useMutation({
-    mutationFn: (data: any) => apiClient('/user/update', {
-      method: 'POST',
+    mutationFn: (data: any) => apiClient('/auth/update-profile', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then((response: any) => response.json()),
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
       console.log('Profile updated successfully');
+      setUser(updatedUser.data); // Update the user in the store
     },
     onError: (error) => {
       console.error('Failed to update profile:', error);
@@ -57,6 +58,7 @@ const ProfilePage = () => {
   });
 
   const onSubmitProfile = (data: any) => {
+    console.log('onSubmitProfile', data);
     updateProfile.mutate(data);
   };
 
@@ -99,7 +101,7 @@ const ProfilePage = () => {
             />
           </div>
           <button 
-            type="submit" 
+            type="submit"
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
             disabled={updateProfile.isPending}
           >

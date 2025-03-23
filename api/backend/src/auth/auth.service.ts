@@ -68,4 +68,28 @@ export class AuthService {
 
     return data;
   }
+
+  async updateUserProfile(userId: string, updateData: { name: string; email: string }) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error updating user profile:', error);
+      throw new Error('Failed to update user profile');
+    }
+
+    return data;
+  }
+
+  async validateUser(email: string, password: string): Promise<User | null> {
+    // Use the correct method for signing in with email and password
+    const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      return null;
+    }
+    return data.user;
+  }
 }

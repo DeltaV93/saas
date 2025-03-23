@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Put } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt/jwt.guard';
@@ -14,18 +14,14 @@ export class AuthController {
     return this.authService.signup(email, password);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('login')
   async login(@Body('email') email: string, @Body('password') password: string, @Req() req: Request) {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      throw new Error('Authorization token is required');
+    const user = await this.authService.validateUser(email, password);
+    if (!user) {
+      return errorResponse('Invalid credentials');
     }
-
-    // Validate session and permissions
-    validateSessionAndPermissions(token, 'user');
-
-    return this.authService.login(email, password);
+    req.session.user = { id: user.id, role: user.role };
+    return successResponse({ message: 'Login successful' });
   }
 
   @Post('google-signup')
@@ -50,5 +46,37 @@ export class AuthController {
       console.error('Error in getMe:', error);
       return errorResponse('Failed to get user information');
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('update-profile')
+  async updateProfile(@Req() req: Request, @Body() updateData: { name: string; email: string }) {
+    try {
+      const userId = req['user'].id;
+      const updatedUser = await this.authService.updateUserProfile(userId, updateData);
+      return successResponse(updatedUser, 'Profile updated successfully');
+    } catch (error) {
+      console.error('Error in updateProfile:', error);
+      return errorResponse('Failed to update profile');
+    }
+  }
+
+  @Get('session')
+  async getSession(@Req() req: Request) {
+    if (!req.session.user) {
+      return errorResponse('No active session');
+    }
+    return successResponse(req.session.user);
+  }
+
+  @Post('logout')
+  async logout(@Req() req: Request) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return errorResponse('Failed to logout');
+      }
+    });
+    return successResponse({ message: 'Logout successful' });
   }
 }

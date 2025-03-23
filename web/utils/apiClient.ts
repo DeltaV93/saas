@@ -13,6 +13,18 @@ const mockData: { [key: string]: any } = {
     subscriptionType: 'premium',
     subscriptionStatus: 'active',
   },
+  '/auth/update-profile': {
+    statusCode: 200,
+    message: 'Profile updated successfully',
+    data: {
+      id: '123',
+      name: 'Updated Name',
+      email: 'updated@example.com',
+      role: 'user',
+      subscriptionType: 'premium',
+      subscriptionStatus: 'active',
+    },
+  },
   '/user/profile': { name: 'John Doe', email: 'john@example.com' },
   '/user/update': { success: true },
   '/user/change-password': { success: true },
@@ -49,6 +61,19 @@ const mockData: { [key: string]: any } = {
 export const apiClient = async (endpoint: string, options?: RequestInit) => {
   if (IS_MOCK_DATA) {
     console.log(`Mock data for ${endpoint}`);
+
+    if (endpoint === '/auth/update-profile' && options?.method === 'PUT') {
+      const body = JSON.parse(options.body as string);
+      mockData['/auth/me'] = {
+        ...mockData['/auth/me'],
+        ...body,
+      };
+      mockData['/auth/update-profile'].data = {
+        ...mockData['/auth/update-profile'].data,
+        ...body,
+      };
+    }
+
     return new Promise((resolve) => {
       setTimeout(() => resolve({
         json: () => Promise.resolve(mockData[endpoint]),

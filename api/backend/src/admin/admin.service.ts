@@ -45,4 +45,18 @@ export class AdminService {
     this.tickets.set(ticketId, ticket);
     return ticket;
   }
+
+  getActiveSessions() {
+    // Placeholder implementation for active sessions
+    return [
+      { sessionId: '1', userId: 'user1', lastActive: new Date() },
+      { sessionId: '2', userId: 'user2', lastActive: new Date() },
+    ];
+  }
+
+  terminateSession(sessionId: string) {
+    // Placeholder implementation for terminating a session
+    console.log(`Terminating session with ID: ${sessionId}`);
+    return { message: `Session ${sessionId} terminated successfully` };
+  }
 }

@@ -1,32 +1,23 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
 
 const DashboardPage = () => {
   const { user, logout, setUser } = useAuthStore();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['userData'],
-    queryFn: fetchUserData,
-  });
-
   useEffect(() => {
     if (!user) {
-      apiClient('/auth/me').then((response: any) => response.json()).then((data) => {
-        if (data) {
-          setUser(data);
-        }
-      });
+      apiClient('/auth/me')
+        .then((response: any) => response.json())
+        .then((data) => {
+          if (data) {
+            setUser(data);
+          }
+        });
     }
   }, [user, setUser]);
-
-  function fetchUserData() {
-    console.log('fetching user data');
-    return apiClient('/api/user').then((response: any) => response.json());
-  }
 
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -36,9 +27,6 @@ const DashboardPage = () => {
       </div>
     </div>
   );
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading data</div>;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -55,7 +43,7 @@ const DashboardPage = () => {
               <button onClick={logout} className="bg-red-500 text-white py-2 px-4 rounded-md">Logout</button>
               <div className="mt-6">
                 <h2 className="text-2xl mb-2">Your Data</h2>
-                <pre className="bg-white p-4 rounded-md shadow-md">{JSON.stringify(data, null, 2)}</pre>
+                <pre className="bg-white p-4 rounded-md shadow-md">{JSON.stringify(user, null, 2)}</pre>
               </div>
             </div>
           </div>

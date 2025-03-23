@@ -91,4 +91,32 @@ export class AdminController {
 
     return this.adminService.updateSupportTicket(ticketId, status);
   }
+
+  @Get('sessions')
+  listActiveSessions(@Req() req: Request) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      throw new Error('Authorization token is required');
+    }
+
+    // Validate session and permissions
+    const admin = validateSessionAndPermissions(token, 'admin');
+    restrictAccess(['admin'], admin.role);
+
+    return this.adminService.getActiveSessions();
+  }
+
+  @Post('sessions/logout/:id')
+  forceLogout(@Param('id') sessionId: string, @Req() req: Request) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      throw new Error('Authorization token is required');
+    }
+
+    // Validate session and permissions
+    const admin = validateSessionAndPermissions(token, 'admin');
+    restrictAccess(['admin'], admin.role);
+
+    return this.adminService.terminateSession(sessionId);
+  }
 }
