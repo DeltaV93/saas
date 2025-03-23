@@ -7,6 +7,7 @@ const stream = pretty({
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
+  transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty', options: { colorize: true } } : undefined,
 }, process.env.NODE_ENV !== 'production' ? stream : undefined);
 
 export function logInfo(message: string, data?: any) {
@@ -19,4 +20,6 @@ export function logError(message: string, error?: any) {
 
 export function logDebug(message: string, data?: any) {
   logger.debug({ message, data });
-} 
+}
+
+export default logger;

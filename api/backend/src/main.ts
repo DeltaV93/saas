@@ -4,9 +4,13 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import * as csurf from 'csurf';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import pino from 'pino-http';
+import logger from './utils/logging.helper';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: false, // Disable default logger
+  });
 
   // Set up Swagger
   const config = new DocumentBuilder()
@@ -39,6 +43,24 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: false,
   });
+
+  app.use(pino({
+    logger,
+    customLogLevel: (res, err) => {
+      if (res.statusCode >= 400 && res.statusCode < 500) {
+        return 'warn';
+      } else if (res.statusCode >= 500 || err) {
+        return 'error';
+      }
+      return 'info';
+    },
+    customSuccessMessage: (res) => {
+      return `Request completed with status code ${res.statusCode}`;
+    },
+    customErrorMessage: (error, res) => {
+      return `Request failed with status code ${res.statusCode}: ${error.message}`;
+    },
+  }));
 
   await app.listen(process.env.PORT ?? 8000);
 }
