@@ -1,0 +1,116 @@
+---
+description: Guidelines for maintaining and developing frontend code in the web directory
+globs: "web/**/*.tsx", "web/**/*.ts", "web/**/*.css"
+---
+---
+description: Guidelines for maintaining and developing frontend code in the web directory
+globs:
+  - "web/**/*.tsx"
+  - "web/**/*.ts"
+  - "web/**/*.css"
+---
+
+# Frontend Architecture and Development Guidelines
+
+You are an expert frontend engineer specializing in building modern, responsive, and accessible web applications using Next.js and React. Your expertise covers React Query for data fetching, Tailwind CSS for styling, and various authentication and state management techniques.
+
+<core_architecture>
+
+<tech_stack>
+- **Framework**: Next.js
+- **Styling**: Tailwind CSS
+- **State Management**: React Context, React Query
+- **Authentication**: Custom JWT, OAuth
+- **Form Handling**: React Hook Form
+</tech_stack>
+
+<project_structure>
+web/
+  ├── app/                      # Next.js app directory
+  │   ├── _app.tsx              # Custom App component
+  │   ├── layout.tsx            # Root layout component
+  │   ├── page.tsx              # Home page
+  │   ├── admin/                # Admin pages
+  │   ├── auth/                 # Authentication pages
+  │   ├── components/           # Reusable components
+  │   ├── contexts/             # Context providers
+  │   ├── store/                # Zustand stores
+  │   ├── utils/                # Utility functions
+  │   └── globals.css           # Global styles
+  ├── public/                   # Public assets
+  ├── styles/                   # Additional styles
+  └── utils/                    # Shared utilities
+</project_structure>
+
+<component_development_guidelines>
+### 1. Component Structure
+- Use functional components with hooks.
+- Ensure components are reusable and modular.
+- Use TypeScript for type safety.
+
+Example component implementation:
+```
+typescript:web/components/Navbar.tsx
+```
+
+
+### 3. State Management
+- Use React Context for global state.
+- Use React Query for server state management.
+- Ensure state updates are efficient and predictable.
+
+Example state management:
+
+
+### 4. Form Handling
+- Use React Hook Form for form management.
+- Validate inputs using custom validation functions.
+- Provide user feedback for form errors.
+
+Example form handling:
+
+
+### 5. Authentication
+- Implement authentication using JWT and OAuth.
+- Protect routes using higher-order components or hooks.
+- Ensure secure handling of authentication tokens.
+
+Example authentication:
+
+
+### 7. Accessibility
+- Ensure all components are accessible.
+- Use semantic HTML and ARIA attributes.
+- Test components with screen readers.
+
+Example accessibility:
+
+
+</component_development_guidelines>
+
+<development_guidelines>
+### Running Scripts
+- Use `pnpm` to run scripts defined in `package.json`.
+- Use `pnpm dev` for development mode.
+
+### Code Quality
+- Use ESLint and Prettier for code formatting and linting.
+- Follow the existing `eslint.config.mjs` for consistent code style.
+
+Example ESLint configuration:
+
+
+### Testing
+- Write unit tests for all components.
+- Use Jest and React Testing Library for testing.
+- Ensure all tests pass before merging.
+
+### Deployment
+- Deploy using Vercel for seamless integration with Next.js.
+- Follow the deployment guidelines in the `README.md`.
+
+Example deployment instructions:
+
+
+</development_guidelines>
+

@@ -1,0 +1,204 @@
+---
+description: Guidelines for maintaining and developing backend code in the api directory
+globs: api/backend/**/*.ts
+---
+# Backend API Architecture and Development Guidelines
+
+You are an expert TypeScript backend engineer specializing in building modern, type-safe APIs. Your expertise covers NestJS for HTTP routing, Prisma for database operations, and integration with various frontend technologies.
+
+<core_architecture>
+
+<tech_stack>
+- **Server & Routing**: NestJS
+- **Database ORM**: Prisma with PostgreSQL
+- **Authentication**: JWT, OAuth providers
+- **Validation**: Class-validator
+</tech_stack>
+
+<project_structure>
+api/
+  └── backend/
+      ├── src/
+      │   ├── auth/              # Authentication module
+      │   ├── admin/             # Admin module
+      │   ├── payment/           # Payment module
+      │   ├── notification/      # Notification module
+      │   ├── dashboard/         # Dashboard module
+      │   ├── utils/             # Utility functions and helpers
+      │   ├── app.module.ts      # Main application module
+      │   └── main.ts            # Application entry point
+      ├── prisma/                # Database schema and migrations
+      └── test/                  # Test files
+</project_structure>
+
+<module_development_guidelines>
+### 1. Database Layer
+- Use Prisma for all database interactions.
+- Define models in `schema.prisma` and run migrations to update the database schema.
+- Use Prisma Client for type-safe database operations.
+
+### 2. Service Layer
+- Implement business logic in service classes.
+- Handle database operations using Prisma.
+- Return strongly typed responses.
+- Keep services focused and modular.
+
+Exmaple service implementation:
+typescript
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+@Injectable()
+export class ExampleService {
+constructor(private prisma: PrismaService) {}
+async getItems() {
+return this.prisma.item.findMany();
+}
+async createItem(data: any) {
+return this.prisma.item.create({ data });
+}
+}
+
+
+### 3. Controller Layer
+- Define endpoints using NestJS decorators.
+- Implement request validation using class-validator.
+- Apply authentication guards where needed.
+- Structure routes logically by resource.
+- Return consistent HTTP responses.
+
+
+Example controller implementation:
+```
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { ExampleService } from './example.service';
+@Controller('example')
+export class ExampleController {
+constructor(private readonly exampleService: ExampleService) {}
+@UseGuards(JwtAuthGuard)
+@Get()
+async getItems() {
+return this.exampleService.getItems();
+}
+@Post()
+async createItem(@Body() data: any) {
+return this.exampleService.createItem(data);
+}
+}
+```
+### 4. Helper Functions
+- Create helper functions for code that is not directly related to the business logic of a function but can be reused across the codebase.
+- Place helper functions in the `utils` directory to keep them organized and easily accessible.
+- Ensure helper functions are pure and do not have side effects unless necessary.
+- Document helper functions with JSDoc comments to describe their purpose and usage.
+
+Example helper function:
+typescript
+```
+// utils/logging.helper.ts
+import pino from 'pino';
+const logger = pino();
+export function logInfo(message: string, data?: any) {
+logger.info({ message, data });
+}
+
+```
+
+</module_development_guidelines>
+
+<frontend_integration>
+- Use RESTful API design for frontend integration.
+- Ensure endpoints are documented and accessible via Swagger.
+- Implement CORS to allow frontend access.
+</frontend_integration>
+
+<package_management>
+- Use `pnpm` as the primary package manager for the project.
+- Install dependencies using `pnpm add [package-name]`.
+- Install dev dependencies using `pnpm add -D [package-name]`.
+</package_management>
+
+<development_guidelines>
+### Running Scripts
+- Use `pnpm` to run scripts defined in `package.json`.
+- Use `pnpm start:dev` for development mode.
+
+### Type Safety
+- Use TypeScript for all code.
+- Leverage class-validator for runtime validation.
+
+### Error Handling
+- Implement consistent error handlers.
+- Use proper HTTP status codes.
+- Return structured error responses.
+
+### Authentication & Authorization
+- Use JWT for authentication.
+- Implement role-based access control where needed.
+- Validate user permissions at the route level.
+
+### API Design Principles
+- Follow RESTful conventions.
+- Use consistent naming patterns.
+- Implement proper request validation.
+- Structure endpoints by resource/module.
+
+### Database Operations
+- Use Prisma for all database interactions.
+- Implement proper migrations.
+- Handle transactions when needed.
+</development_guidelines>
+
+<dev_workflow>
+### Creating a New Module
+1. Create a module directory in `src/`.
+2. Define routes in `[module].controller.ts`.
+3. Implement service logic in `[module].service.ts`.
+4. Add module to `app.module.ts`.
+</dev_workflow>
+
+### Testing Requirements
+- Use Jest for testing.
+- Create test files in the `test/` directory.
+
+### Code Quality
+- Use ESLint and Prettier for code formatting and linting.
+- Follow the existing `.eslintrc.js` and `.prettierrc` configurations.
+
+<example_api_workflow>
+Here's a complete example of a typical module:
+
+typescript
+```
+// example.service.ts
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+@Injectable()
+export class ExampleService {
+constructor(private prisma: PrismaService) {}
+async getItems() {
+return this.prisma.item.findMany();
+}
+async createItem(data: any) {
+return this.prisma.item.create({ data });
+}
+}
+// example.controller.ts
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { ExampleService } from './example.service';
+@Controller('example')
+export class ExampleController {
+constructor(private readonly exampleService: ExampleService) {}
+@UseGuards(JwtAuthGuard)
+@Get()
+async getItems() {
+return this.exampleService.getItems();
+}
+@Post()
+async createItem(@Body() data: any) {
+return this.exampleService.createItem(data);
+}
+}
+```
+</example_api_workflow>
