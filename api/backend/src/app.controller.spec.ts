@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { Request } from 'express';
+
+// Mock the validateSessionAndPermissions function
+jest.mock('./utils/authentication.helper', () => ({
+  validateSessionAndPermissions: jest.fn(),
+}));
 
 describe('AppController', () => {
   let appController: AppController;
@@ -16,7 +22,14 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+      // Create a mock Request object
+      const mockRequest = {
+        headers: {
+          authorization: 'Bearer fake-token',
+        },
+      } as Request;
+      
+      expect(appController.getHello(mockRequest)).toBe('Hello World!');
     });
   });
 });

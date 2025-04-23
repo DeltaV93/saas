@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14"
+  }
+}
