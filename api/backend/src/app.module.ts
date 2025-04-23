@@ -6,9 +6,17 @@ import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminModule } from './admin/admin.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
-  imports: [AuthModule, PaymentModule, NotificationModule, DashboardModule, AdminModule],
+  imports: [
+    AuthModule,
+    PaymentModule,
+    NotificationModule,
+    DashboardModule,
+    AdminModule,
+    HealthModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

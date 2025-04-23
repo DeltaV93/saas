@@ -1,8 +1,26 @@
 {
-  "dependencies": {
-    "pino": "^9.6.0"
+  "name": "sass-starter",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "api/backend",
+    "web"
+  ],
+  "scripts": {
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "cd api/backend && npm run build",
+    "build:web": "cd web && npm run build",
+    "start": "npm run start:api && npm run start:web",
+    "start:api": "cd api/backend && npm run start:prod",
+    "start:web": "cd web && npm run start",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd api/backend && npm run start:dev",
+    "dev:web": "cd web && npm run dev",
+    "test": "npm run test:api && npm run test:web",
+    "test:api": "cd api/backend && npm run test",
+    "test:web": "cd web && npm run test"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14"
+    "concurrently": "^8.2.2"
   }
 }
