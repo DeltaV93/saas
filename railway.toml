@@ -12,11 +12,11 @@ restartPolicyType = "on_failure"
 name = "api"
 rootDirectory = "api/backend"
 startCommand = "npm run start:prod"
-buildCommand = "npm install --legacy-peer-deps && npm run build"
+buildCommand = "npm install && npm run build"
 healthcheckPath = "/api/health"
 
 [service.web]
 name = "web"
 rootDirectory = "web"
 startCommand = "npm run start"
-buildCommand = "npm install --legacy-peer-deps && npm run build" 
+buildCommand = "npm install && npm run build"
