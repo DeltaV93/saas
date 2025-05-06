@@ -17,7 +17,7 @@ COPY api/backend/package.json ./api/backend/
 COPY web/package.json ./web/
 
 # Install dependencies using pnpm
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy the rest of the application
 COPY . .
