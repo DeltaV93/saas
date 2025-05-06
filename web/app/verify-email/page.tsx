@@ -2,22 +2,24 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
 
+interface VerificationFormData {
+  verificationCode: string;
+}
+
 const VerifyEmailPage = () => {
-  const router = useRouter();
   const searchParams = new URLSearchParams(window.location.search);
   const from = searchParams.get('from');
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<VerificationFormData>();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: VerificationFormData) => {
     apiClient('/auth/verify-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ verificationCode: data.verificationCode }),
     })
-      .then((response: any) => response.json())
+      .then((response: Response) => response.json())
       .then(() => {
         // Handle successful verification
         console.log('Email verified');
@@ -49,4 +51,4 @@ const VerifyEmailPage = () => {
   );
 };
 
-export default VerifyEmailPage; 
+export default VerifyEmailPage;

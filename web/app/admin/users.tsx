@@ -1,11 +1,33 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+const fetchUsers = async (): Promise<User[]> => {
+  // Implement API call to fetch users
+  const response = await fetch('/api/admin/users');
+  return response.json();
+};
 
 const AdminUsersPage = () => {
   const { user } = useAuthStore();
   const router = useRouter();
+  
+  // Always call useQuery, regardless of user state, to satisfy the Rules of Hooks
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+    // Don't actually fetch if user isn't admin
+    enabled: !!user && user.role === 'admin'
+  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -13,26 +35,9 @@ const AdminUsersPage = () => {
     }
   }, [user, router]);
 
+  // Return early if user isn't an admin
   if (!user || user.role !== 'admin') {
     return null;
-  }
-
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: fetchUsers,
-  });
-
-  type User = {
-    id: string;
-    name: string;
-    email: string;
-  };
-
-  const usersTyped = users as User[];
-
-  function fetchUsers() {
-    // TODO: Implement API call to fetch users
-    return fetch('/api/admin/users').then(res => res.json());
   }
 
   if (isLoading) return <div>Loading...</div>;
@@ -50,7 +55,7 @@ const AdminUsersPage = () => {
             <div className="rounded-lg h-96 bg-white p-4 shadow-md">
               <h2 className="text-2xl font-bold mb-4">Users</h2>
               <ul>
-                {usersTyped.map((user: any) => (
+                {users.map((user) => (
                   <li key={user.id} className="mb-2">
                     {user.name} - {user.email}
                     {/* TODO: Add actions for managing users */}
@@ -65,4 +70,4 @@ const AdminUsersPage = () => {
   );
 };
 
-export default AdminUsersPage; 
+export default AdminUsersPage;

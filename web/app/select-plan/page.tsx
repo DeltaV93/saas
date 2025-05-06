@@ -3,18 +3,24 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import router, { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'; // Fixed import
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
 
 const stripePromise = loadStripe('your-publishable-key-here');
+
+interface Plan {
+  id: string;
+  name: string;
+  price: string;
+}
 
 const SelectPlanPage = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const { setRole } = useAuthStore();
   const router = useRouter();
   
-  const plans = [
+  const plans: Plan[] = [
     { id: 'basic', name: 'Basic Plan', price: '$10/month' },
     { id: 'premium', name: 'Premium Plan', price: '$20/month' },
     { id: 'enterprise', name: 'Enterprise Plan', price: '$50/month' },
@@ -29,7 +35,11 @@ const SelectPlanPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded shadow-md max-w-2xl w-full flex">
           {selectedPlan ? (
-            <PaymentForm selectedPlan={plans.find(plan => plan.id === selectedPlan)} onBack={() => setSelectedPlan(null)} setRole={setRole} />
+            <PaymentForm 
+              selectedPlan={plans.find(plan => plan.id === selectedPlan)} 
+              onBack={() => setSelectedPlan(null)} 
+              setRole={setRole} 
+            />
           ) : (
             <PlanSelection plans={plans} onSelect={handleSelectPlan} />
           )}
@@ -39,7 +49,12 @@ const SelectPlanPage = () => {
   );
 };
 
-const PlanSelection = ({ plans, onSelect }: { plans: any[]; onSelect: (planId: string) => void }) => (
+interface PlanSelectionProps {
+  plans: Plan[];
+  onSelect: (planId: string) => void;
+}
+
+const PlanSelection = ({ plans, onSelect }: PlanSelectionProps) => (
   <div className="w-full">
     <h2 className="text-2xl font-bold mb-6 text-center">Select a Plan</h2>
     <ul>
@@ -63,13 +78,20 @@ const PlanSelection = ({ plans, onSelect }: { plans: any[]; onSelect: (planId: s
   </div>
 );
 
-const PaymentForm = ({ selectedPlan, onBack, setRole }: { selectedPlan: any; onBack: () => void; setRole: (role: string) => void }) => {
+interface PaymentFormProps {
+  selectedPlan: Plan | undefined;
+  onBack: () => void;
+  setRole: (role: string) => void;
+}
+
+const PaymentForm = ({ selectedPlan, onBack, setRole }: PaymentFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !selectedPlan) {
       return;
     }
     const cardElement = elements.getElement(CardElement);
@@ -84,23 +106,32 @@ const PaymentForm = ({ selectedPlan, onBack, setRole }: { selectedPlan: any; onB
       } else {
         console.log('PaymentMethod:', paymentMethod);
         // Use apiClient to update user role based on selected plan
-        const response = await apiClient('/auth/update-role', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planId: selectedPlan.id }),
-        }) as Response;
-        const result = await response.json();
-        if (result.success) {
-          // Update the user's role in the frontend state
-          setRole(result.newRole);
-          // Redirect to the dashboard or another page based on the new role
-          router.push('/dashboard');
-        } else {
-          console.error('Failed to update role');
+        try {
+          const response = await apiClient('/auth/update-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planId: selectedPlan.id }),
+          }) as Response;
+          
+          const result = await response.json();
+          if (result.success) {
+            // Update the user's role in the frontend state
+            setRole(result.newRole);
+            // Redirect to the dashboard or another page based on the new role
+            router.push('/dashboard');
+          } else {
+            console.error('Failed to update role');
+          }
+        } catch (error) {
+          console.error('Payment processing error:', error);
         }
       }
     }
   };
+
+  if (!selectedPlan) {
+    return <div>No plan selected</div>;
+  }
 
   return (
     <div className="w-full flex">
@@ -121,4 +152,4 @@ const PaymentForm = ({ selectedPlan, onBack, setRole }: { selectedPlan: any; onB
   );
 };
 
-export default SelectPlanPage; 
+export default SelectPlanPage;
