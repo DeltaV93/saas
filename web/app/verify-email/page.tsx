@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
 
 interface VerificationFormData {
@@ -9,9 +10,14 @@ interface VerificationFormData {
 }
 
 const VerifyEmailPage = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const from = searchParams.get('from');
+  const searchParams = useSearchParams();
+  const [from, setFrom] = useState<string | null>(null);
   const { register, handleSubmit } = useForm<VerificationFormData>();
+
+  useEffect(() => {
+    // Access searchParams safely in useEffect (client-side only)
+    setFrom(searchParams?.get('from') || null);
+  }, [searchParams]);
 
   const onSubmit = (data: VerificationFormData) => {
     apiClient('/auth/verify-email', {
