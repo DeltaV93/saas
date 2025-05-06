@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
 
 interface PasswordFormData {
@@ -10,13 +10,19 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
-const ConfirmPasswordPage = () => {
+const ConfirmPasswordContent = () => {
   const { register, handleSubmit, watch, formState: { errors } } = useForm<PasswordFormData>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [token, setToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const searchParams = new URLSearchParams(window.location.search);
-  const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (searchParams) {
+      setToken(searchParams.get('token'));
+    }
+  }, [searchParams]);
 
   const passwordRequirements = [
     { id: 1, text: 'At least 8 characters long' },
@@ -27,6 +33,11 @@ const ConfirmPasswordPage = () => {
   ];
 
   const onSubmit = (data: PasswordFormData) => {
+    if (!token) {
+      console.error('Reset token is missing');
+      return;
+    }
+
     apiClient('/auth/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,6 +54,9 @@ const ConfirmPasswordPage = () => {
         } else {
           console.error('Failed to reset password');
         }
+      })
+      .catch((error) => {
+        console.error('Error resetting password:', error);
       });
   };
 
@@ -138,6 +152,14 @@ const ConfirmPasswordPage = () => {
         </form>
       </div>
     </div>
+  );
+};
+
+const ConfirmPasswordPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>}>
+      <ConfirmPasswordContent />
+    </Suspense>
   );
 };
 

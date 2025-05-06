@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
@@ -9,7 +9,7 @@ interface VerificationFormData {
   verificationCode: string;
 }
 
-const VerifyEmailPage = () => {
+const VerifyEmailContent = () => {
   const searchParams = useSearchParams();
   const [from, setFrom] = useState<string | null>(null);
   const { register, handleSubmit } = useForm<VerificationFormData>();
@@ -25,10 +25,13 @@ const VerifyEmailPage = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ verificationCode: data.verificationCode }),
     })
-      .then((response: Response) => response.json())
+      .then((response: any) => response.json())
       .then(() => {
         // Handle successful verification
         console.log('Email verified');
+      })
+      .catch((error) => {
+        console.error('Error verifying email:', error);
       });
   };
 
@@ -54,6 +57,14 @@ const VerifyEmailPage = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const VerifyEmailPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 };
 
