@@ -1,22 +1,9 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm run build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "npm run start"
-healthcheckPath = "/health"
+healthcheckPath = "/api/backend/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
-
-[service.api]
-name = "api"
-rootDirectory = "api/backend"
-startCommand = "npm run start:prod"
-buildCommand = "npm install && npm run build"
-healthcheckPath = "/api/health"
-
-[service.web]
-name = "web"
-rootDirectory = "web"
-startCommand = "npm run start"
-buildCommand = "npm install && npm run build"
