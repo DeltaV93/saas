@@ -1,7 +1,10 @@
 # Use Node.js 20 (matching your .nvmrc)
 FROM node:20-alpine AS base
 
-# Install pnpm (better for monorepos)
+# Install necessary build tools for bcrypt and other native modules
+RUN apk add --no-cache python3 make g++ curl
+
+# Install pnpm
 RUN npm install -g pnpm
 
 # Create app directory
@@ -9,24 +12,42 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json ./
-COPY pnpm-lock.yaml* ./
 COPY pnpm-workspace.yaml ./
 
-# Copy all workspace configs
+# Copy workspace package files
 COPY api/backend/package.json ./api/backend/
 COPY web/package.json ./web/
 
-# Install dependencies using pnpm
+# Install dependencies at root level first
 RUN pnpm install
 
 # Copy the rest of the application
 COPY . .
 
-# Build the applications
+# Build bcrypt in api/backend
+WORKDIR /app/api/backend
+RUN pnpm install
+RUN pnpm add bcrypt@5.1.1
+
+# Build the backend
 RUN pnpm run build
+
+# Return to root directory
+WORKDIR /app
+
+# Build the web application
+WORKDIR /app/web
+RUN pnpm install
+RUN pnpm run build
+
+# Return to root directory
+WORKDIR /app
 
 # Production image
 FROM node:20-alpine AS production
+
+# Install necessary runtime dependencies for bcrypt
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
@@ -43,8 +64,11 @@ COPY --from=base /app/web/package.json ./web/package.json
 COPY --from=base /app/package.json ./package.json
 COPY --from=base /app/node_modules ./node_modules
 
-# Start command
-CMD ["npm", "run", "start"]
+# Set environment variables
+ENV NODE_ENV=production
+
+# Start each service separately instead of trying to start both at once
+CMD ["npm", "run", "start:api"]
 
 # Expose ports
 EXPOSE 3000 8000
