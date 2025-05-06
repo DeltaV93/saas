@@ -33,7 +33,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/terminus": "^11.0.2",
-    "@nestjs/typeorm": "^11.0.2"
+    "@nestjs/typeorm": "^11.0.0"
   },
   "engines": {
     "node": ">=20"

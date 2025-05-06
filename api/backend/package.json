@@ -29,7 +29,7 @@
     "@nestjs/platform-express": "^11.0.2",
     "@nestjs/swagger": "^11.0.6",
     "@nestjs/terminus": "^11.0.2",
-    "@nestjs/typeorm": "^11.0.2",
+    "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^6.4.0",
     "@supabase/supabase-js": "^2.48.1",
     "aws-sdk": "^2.1692.0",
