@@ -1,10 +1,14 @@
+import getConfig from 'next/config';
+
 const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 
-// Get backend URL from environment
+// Get backend URL from runtime config
 const getBackendUrl = () => {
-  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const { publicRuntimeConfig } = getConfig();
+  const url = publicRuntimeConfig?.backendUrl;
+  
   if (!url) {
-    console.error('NEXT_PUBLIC_BACKEND_URL is not defined in environment variables');
+    console.error('Backend URL is not configured in environment variables');
     throw new Error('Backend URL is not configured');
   }
   // Ensure URL ends with a slash

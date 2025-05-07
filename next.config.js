@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://saas-production-a504.up.railway.app:8000',
+  publicRuntimeConfig: {
+    // Will be available on both server and client
+    backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
   // ... any other existing config
 }
