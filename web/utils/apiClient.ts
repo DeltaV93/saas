@@ -13,24 +13,31 @@ const getBackendUrl = () => {
     
     // If we're in production and the environment variables are set, use them
     if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-      return process.env.NEXT_PUBLIC_BACKEND_URL;
+      // Ensure the URL ends with a slash
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL.endsWith('/') 
+        ? process.env.NEXT_PUBLIC_BACKEND_URL 
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/`;
+      return baseUrl;
     }
     
     // If we're in production and no environment variables are set, use the current domain
     if (process.env.NODE_ENV === 'production') {
-      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}/`;
     }
     
     // Default to localhost for development
-    return 'http://localhost:8000';
+    return 'http://localhost:8000/';
   }
   
   // On the server we can use any env var
-  return process.env.BACKEND_URL || 
+  const serverUrl = process.env.BACKEND_URL || 
          process.env.API_URL || 
          process.env.NEXT_PUBLIC_BACKEND_URL ||
          process.env.NEXT_PUBLIC_API_URL ||
-         'http://localhost:8000';
+         'http://localhost:8000/';
+         
+  // Ensure the URL ends with a slash
+  return serverUrl.endsWith('/') ? serverUrl : `${serverUrl}/`;
 };
 
 const mockData: { [key: string]: any } = {
