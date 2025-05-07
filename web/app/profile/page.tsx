@@ -6,15 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  subscriptionType: string;
-  subscriptionStatus: string;
-}
+import { User } from '@/types/api';
 
 interface ProfileFormData {
   name: string;
@@ -55,8 +47,10 @@ const ProfilePage = () => {
       router.push('/login');
     } else {
       // Prepopulate form fields with user data
-      profileForm.setValue('name', user?.name);
-      profileForm.setValue('email', user?.email);
+      if (user.name) {
+        profileForm.setValue('name', user.name);
+      }
+      profileForm.setValue('email', user.email);
     }
   }, [user, router, profileForm]);
 
