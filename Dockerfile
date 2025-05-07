@@ -61,7 +61,7 @@ ENV NODE_ENV=production
 ENV PORT=8000
 
 # Start only the API service
-CMD ["npm", "run", "start:api"]
+CMD ["npm", "run", "start"]
 
 # Expose ports
 EXPOSE 8000
