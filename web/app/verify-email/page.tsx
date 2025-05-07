@@ -9,6 +9,11 @@ interface VerificationFormData {
   verificationCode: string;
 }
 
+interface VerificationResponse {
+  success: boolean;
+  message?: string;
+}
+
 const VerifyEmailContent = () => {
   const searchParams = useSearchParams();
   const [from, setFrom] = useState<string | null>(null);
@@ -25,7 +30,13 @@ const VerifyEmailContent = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ verificationCode: data.verificationCode }),
     })
-      .then((response: any) => response.json())
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as VerificationResponse;
+        }
+        return response as VerificationResponse;
+      })
       .then(() => {
         // Handle successful verification
         console.log('Email verified');
