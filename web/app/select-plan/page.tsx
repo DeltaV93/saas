@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useRouter } from 'next/navigation'; // Fixed import
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
 
@@ -18,7 +17,6 @@ interface Plan {
 const SelectPlanPage = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const { setRole } = useAuthStore();
-  const router = useRouter();
   
   const plans: Plan[] = [
     { id: 'basic', name: 'Basic Plan', price: '$10/month' },
