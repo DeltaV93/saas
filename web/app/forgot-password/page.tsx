@@ -5,18 +5,33 @@ import { useForm } from 'react-hook-form';
 import { apiClient } from '@/utils/apiClient';
 import { useRouter } from 'next/navigation';
 
+interface ForgotPasswordFormData {
+  email: string;
+}
+
+interface ForgotPasswordResponse {
+  success: boolean;
+  message?: string;
+}
+
 const ForgotPasswordPage = () => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<ForgotPasswordFormData>();
   const router = useRouter();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: ForgotPasswordFormData) => {
     apiClient('/auth/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: data.email }),
     })
-      .then((response: any) => response.json())
-      .then((result: any) => {
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as ForgotPasswordResponse;
+        }
+        return response as ForgotPasswordResponse;
+      })
+      .then((result: ForgotPasswordResponse) => {
         if (result.success) {
           router.push('/verify-email?from=login');
           console.log('Password reset link sent successfully');
