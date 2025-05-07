@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormRegisterReturn } from 'react-hook-form';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import { apiClient } from '../utils/apiClient';
@@ -13,6 +13,11 @@ interface PasswordRequirement {
   id: string;
   label: string;
   validator: (value: string) => boolean;
+}
+
+interface ResetPasswordResponse {
+  success: boolean;
+  message?: string;
 }
 
 const passwordRequirements: PasswordRequirement[] = [
@@ -82,12 +87,23 @@ export const ConfirmNewPassword = () => {
         }),
       });
       
-      if (response.ok) {
-        router.push('/login?message=password-reset-success');
+      if (response instanceof Response) {
+        const result = await response.json() as ResetPasswordResponse;
+        if (result.success) {
+          router.push('/login?message=password-reset-success');
+        } else {
+          throw new Error(result.message || 'Password reset failed');
+        }
       } else {
-        throw new Error('Password reset failed');
+        const result = response as ResetPasswordResponse;
+        if (result.success) {
+          router.push('/login?message=password-reset-success');
+        } else {
+          throw new Error(result.message || 'Password reset failed');
+        }
       }
     } catch (error) {
+      console.error('Password reset failed:', error);
       setError('root', {
         type: 'manual',
         message: 'Failed to reset password. Please try again.',
@@ -107,7 +123,7 @@ export const ConfirmNewPassword = () => {
     label: string;
     show: boolean;
     toggle: () => void;
-    registration: any;
+    registration: UseFormRegisterReturn;
     error?: string;
   }) => (
     <div className="relative mb-4">
