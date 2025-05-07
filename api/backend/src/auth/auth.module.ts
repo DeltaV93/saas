@@ -11,17 +11,19 @@ import { logError } from '../utils/logging.helper';
 const redisOptions = {
   host: process.env.REDIS_HOST || '127.0.0.1',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
-  retryStrategy: (times) => {
+  retryStrategy: (times: number) => {
     const delay = Math.min(times * 50, 2000);
     return delay;
   },
   maxRetriesPerRequest: 3,
   enableOfflineQueue: false,
+  connectTimeout: 10000, // 10 second timeout
+  lazyConnect: true, // Don't connect immediately
 };
 
 // Try to use REDIS_URL if available, otherwise use options
 const redisClient = process.env.REDIS_URL 
-  ? new Redis(process.env.REDIS_URL)
+  ? new Redis(process.env.REDIS_URL, redisOptions)
   : new Redis(redisOptions);
 
 // Handle Redis connection errors
@@ -61,9 +63,11 @@ export class AuthModule {
       },
     };
 
-    // Only use Redis store if Redis is connected
+    // Only use Redis store if Redis is connected and ready
     if (redisClient.status === 'ready') {
       sessionOptions['store'] = redisStore;
+    } else {
+      logError('Redis not ready, using memory store for sessions', null);
     }
 
     consumer

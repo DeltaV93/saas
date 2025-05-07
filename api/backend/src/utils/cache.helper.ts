@@ -11,11 +11,13 @@ const redisOptions = {
   },
   maxRetriesPerRequest: 3,
   enableOfflineQueue: false,
+  connectTimeout: 10000, // 10 second timeout
+  lazyConnect: true, // Don't connect immediately
 };
 
 // Try to use REDIS_URL if available, otherwise use options
 const redis = process.env.REDIS_URL 
-  ? new Redis(process.env.REDIS_URL)
+  ? new Redis(process.env.REDIS_URL, redisOptions)
   : new Redis(redisOptions);
 
 // Handle Redis connection errors
@@ -24,10 +26,21 @@ redis.on('error', (error) => {
   // Don't crash the application on Redis connection errors
 });
 
+// Track Redis connection status
+let isRedisConnected = false;
+redis.on('connect', () => {
+  isRedisConnected = true;
+  console.log('Redis connected successfully');
+});
+redis.on('close', () => {
+  isRedisConnected = false;
+  console.log('Redis connection closed');
+});
+
 export async function cacheQuery(key: string, data: any, ttl: number) {
   try {
-    if (!redis.status || redis.status !== 'ready') {
-      logError('Redis not ready, skipping cache operation', null);
+    if (!isRedisConnected) {
+      logError('Redis not connected, skipping cache operation', null);
       return;
     }
     await redis.set(key, JSON.stringify(data), 'EX', ttl);
@@ -38,8 +51,8 @@ export async function cacheQuery(key: string, data: any, ttl: number) {
 
 export async function getCachedQuery(key: string) {
   try {
-    if (!redis.status || redis.status !== 'ready') {
-      logError('Redis not ready, skipping cache retrieval', null);
+    if (!isRedisConnected) {
+      logError('Redis not connected, skipping cache retrieval', null);
       return null;
     }
     const data = await redis.get(key);
@@ -52,7 +65,7 @@ export async function getCachedQuery(key: string) {
 
 export async function rateLimit(key: string, limit: number, window: number) {
   try {
-    if (!redis.status || redis.status !== 'ready') {
+    if (!isRedisConnected) {
       // If Redis is not available, skip rate limiting but don't block the request
       return;
     }

@@ -98,8 +98,17 @@ process.on('uncaughtException', (error: any) => {
   // Don't exit the process for non-critical errors
   if (error.code === 'ECONNREFUSED' && error.address === '127.0.0.1') {
     logger.warn('Redis connection refused. Application will continue without Redis.');
+  } else if (error.message && error.message.includes('Redis')) {
+    logger.warn('Redis error occurred. Application will continue without Redis.');
   } else {
     process.exit(1);
+  }
+});
+
+// Handle Redis connection errors globally
+process.on('warning', (warning) => {
+  if (warning.name === 'DeprecationWarning' && warning.message.includes('Redis')) {
+    logger.warn('Redis deprecation warning:', warning.message);
   }
 });
 
