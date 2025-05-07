@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "npm run start:api"
+startCommand = "/app/start.sh"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 
