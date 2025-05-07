@@ -1,5 +1,16 @@
 const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 
+// Get backend URL from environment
+const getBackendUrl = () => {
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!url) {
+    console.error('NEXT_PUBLIC_BACKEND_URL is not defined in environment variables');
+    throw new Error('Backend URL is not configured');
+  }
+  // Ensure URL ends with a slash
+  return url.endsWith('/') ? url : `${url}/`;
+};
+
 const mockData: { [key: string]: any } = {
   '/auth/signup': { success: true, user: { name: 'New User', role: 'user' } },
   '/auth/login': { success: true, token: 'mock-jwt-token' },
@@ -81,6 +92,15 @@ export const apiClient = async (endpoint: string, options?: RequestInit) => {
     });
   }
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`, options);
-  return response;
+  const backendUrl = getBackendUrl();
+  // Remove leading slash from endpoint if it exists
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  
+  try {
+    const response = await fetch(`${backendUrl}${cleanEndpoint}`, options);
+    return response;
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw new Error(`Failed to make request to ${backendUrl}${cleanEndpoint}`);
+  }
 }; 
