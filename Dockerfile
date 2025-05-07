@@ -37,7 +37,7 @@ WORKDIR /app
 FROM node:20-alpine AS production
 
 # Install necessary runtime dependencies for bcrypt
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ curl
 
 WORKDIR /app
 
@@ -63,7 +63,8 @@ RUN chmod +x /app/start.sh
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=8000
-ENV NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:8000}
+ENV NEXT_PUBLIC_FRONTEND_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:3000}
 
 # Expose ports for both frontend and backend
 EXPOSE 8000
