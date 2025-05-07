@@ -6,17 +6,34 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/utils/apiClient';
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  token?: string;
+  message?: string;
+}
+
 const LoginPage: React.FC = () => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<LoginFormData>();
   const router = useRouter();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: LoginFormData) => {
     apiClient('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-      .then((response: any) => response.json())
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as LoginResponse;
+        }
+        return response as LoginResponse;
+      })
       .then((result) => {
         if (result.success) {
           console.log('Login successful');
