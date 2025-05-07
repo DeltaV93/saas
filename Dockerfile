@@ -59,9 +59,11 @@ COPY --from=base /app/node_modules ./node_modules
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=8000
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000
 
-# Start only the API service
-CMD ["npm", "run", "start"]
-
-# Expose ports
+# Expose ports for both frontend and backend
 EXPOSE 8000
+EXPOSE 3000
+
+# Start both frontend and backend services
+CMD ["npm", "run", "start"]
