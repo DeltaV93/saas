@@ -6,25 +6,44 @@ import { useAuthStore } from '../store/authStore';
 import { apiClient } from '../utils/apiClient';
 import { useRouter } from 'next/navigation';
 
+interface LogoutResponse {
+  success: boolean;
+  message?: string;
+}
+
 const Navbar = () => {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleLogout = () => {
-    apiClient('/auth/logout', {
-      method: 'POST',
-    })
-      .then((response: any) => response.json())
-      .then((result: any) => {
+  const handleLogout = async () => {
+    try {
+      const response = await apiClient('/auth/logout', {
+        method: 'POST',
+      });
+      
+      if (response instanceof Response) {
+        const result = await response.json() as LogoutResponse;
         if (result.success) {
           logout();
           console.log('User logged out successfully');
           router.push('/login');
         } else {
-          console.error('Logout failed');
+          console.error('Logout failed:', result.message);
         }
-      });
+      } else {
+        const result = response as LogoutResponse;
+        if (result.success) {
+          logout();
+          console.log('User logged out successfully');
+          router.push('/login');
+        } else {
+          console.error('Logout failed:', result.message);
+        }
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const toggleDropdown = () => {

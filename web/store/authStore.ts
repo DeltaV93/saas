@@ -1,13 +1,5 @@
 import { create } from 'zustand';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  subscriptionType: string;
-  subscriptionStatus: string;
-}
+import { User } from '../types/api';
 
 interface AuthState {
   user: User | null;
