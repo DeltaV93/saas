@@ -4,13 +4,28 @@ import React, { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  subscriptionType: string;
+  subscriptionStatus: string;
+}
+
 const DashboardPage = () => {
   const { user, logout, setUser } = useAuthStore();
 
   useEffect(() => {
     if (!user) {
       apiClient('/auth/me')
-        .then((response: any) => response.json())
+        .then(async (response) => {
+          if (response instanceof Response) {
+            const data = await response.json();
+            return data as User;
+          }
+          return response as User;
+        })
         .then((data) => {
           if (data) {
             setUser(data);
