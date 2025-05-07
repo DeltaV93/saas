@@ -1,11 +1,10 @@
 
 /** @type {import('next').NextConfig} */
+const { publicRuntimeConfig } = require('./env');
+
 const nextConfig = {
     reactStrictMode: true,
-    publicRuntimeConfig: {
-      // Will be available on both server and client
-      backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-    },
+    publicRuntimeConfig,
     // Disable TypeScript type checking during build to allow deployment
     typescript: {
       // !! WARN !!

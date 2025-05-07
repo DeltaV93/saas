@@ -4,23 +4,20 @@ const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 
 // Get backend URL from runtime config or environment variables
 const getBackendUrl = () => {
-  // First try to get from Next.js runtime config
-  const runtimeConfig = getConfig();
-  const configUrl = runtimeConfig?.publicRuntimeConfig?.backendUrl;
-  
-  // Then try environment variables directly (fallback)
-  const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
-  
-  const url = configUrl || envUrl;
-  
-  if (!url) {
-    console.warn('Backend URL is not configured, using default');
-    // Use a default for development
-    return 'http://localhost:8000/'; 
+  // For the browser, we can only use NEXT_PUBLIC_ variables
+  if (typeof window !== 'undefined') {
+    // These were set at build time and inlined into the bundle
+    return process.env.NEXT_PUBLIC_BACKEND_URL || 
+           process.env.NEXT_PUBLIC_API_URL || 
+           'http://localhost:8000/';
   }
   
-  // Ensure URL ends with a slash
-  return url.endsWith('/') ? url : `${url}/`;
+  // On the server we can use any env var
+  return process.env.BACKEND_URL || 
+         process.env.API_URL || 
+         process.env.NEXT_PUBLIC_BACKEND_URL ||
+         process.env.NEXT_PUBLIC_API_URL ||
+         'http://localhost:8000/';
 };
 
 const mockData: { [key: string]: any } = {

@@ -60,9 +60,13 @@ COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # Set environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BACKEND_URL
+
 ENV NODE_ENV=production \
     PORT=8000 \
     NEXT_PUBLIC_API_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:8000} \
+    NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000} \
     NEXT_PUBLIC_FRONTEND_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:3000} \
     NEXT_PUBLIC_PORT=3000
 
