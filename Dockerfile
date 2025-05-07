@@ -11,7 +11,6 @@ WORKDIR /app
 COPY package.json ./
 COPY api/backend/package.json ./api/backend/
 COPY web/package.json ./web/
-
 # Install root dependencies
 RUN npm install --legacy-peer-deps
 
@@ -61,10 +60,11 @@ COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # Set environment variables
-ENV NODE_ENV=production
-ENV PORT=8000
-ENV NEXT_PUBLIC_API_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:8000}
-ENV NEXT_PUBLIC_FRONTEND_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:3000}
+ENV NODE_ENV=production \
+    PORT=8000 \
+    NEXT_PUBLIC_API_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:8000} \
+    NEXT_PUBLIC_FRONTEND_URL=${RAILWAY_PUBLIC_DOMAIN:-http://localhost:3000} \
+    NEXT_PUBLIC_PORT=3000
 
 # Expose ports for both frontend and backend
 EXPOSE 8000

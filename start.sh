@@ -38,7 +38,7 @@ fi
 # Start the frontend service
 echo "Starting frontend service..."
 cd /app/web
-npm run start &
+PORT=3000 npm run start &
 FRONTEND_PID=$!
 
 # Wait for frontend to be ready
