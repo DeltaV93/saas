@@ -83,8 +83,8 @@ describe('PaymentService', () => {
           },
         ],
         mode: 'payment',
-        success_url: 'http://localhost:3000/success',
-        cancel_url: 'http://localhost:3000/cancel',
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/success`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/cancel`,
       });
 
       expect(result).toEqual(mockSessionData);

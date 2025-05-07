@@ -81,6 +81,6 @@ export const apiClient = async (endpoint: string, options?: RequestInit) => {
     });
   }
 
-  const response = await fetch(`http://localhost:8000${endpoint}`, options);
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`, options);
   return response;
 }; 
