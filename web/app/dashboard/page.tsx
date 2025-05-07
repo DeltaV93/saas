@@ -3,15 +3,7 @@
 import React, { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  subscriptionType: string;
-  subscriptionStatus: string;
-}
+import { User } from '../../types/api';
 
 const DashboardPage = () => {
   const { user, logout, setUser } = useAuthStore();
