@@ -10,6 +10,11 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
+interface ResetPasswordResponse {
+  success: boolean;
+  message?: string;
+}
+
 const ConfirmPasswordContent = () => {
   const { register, handleSubmit, watch, formState: { errors } } = useForm<PasswordFormData>();
   const router = useRouter();
@@ -46,8 +51,14 @@ const ConfirmPasswordContent = () => {
         token: token 
       }),
     })
-      .then((response: any) => response.json())
-      .then((result: any) => {
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as ResetPasswordResponse;
+        }
+        return response as ResetPasswordResponse;
+      })
+      .then((result) => {
         if (result.success) {
           router.push('/login');
           console.log('Password reset successfully');
