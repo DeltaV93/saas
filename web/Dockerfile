@@ -31,10 +31,12 @@ RUN npm install --legacy-peer-deps
 # CRITICAL: Set ARG variables that can be passed at build time for Next.js
 ARG NEXT_PUBLIC_BACKEND_URL
 ARG NEXT_PUBLIC_API_URL
+ARG RAILWAY_PUBLIC_DOMAIN
 
 # Set default values for the build environment variables
 ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+ENV RAILWAY_PUBLIC_DOMAIN=${RAILWAY_PUBLIC_DOMAIN:-localhost}
 
 # Now run the build with these environment variables available
 RUN npm run build
@@ -72,6 +74,9 @@ RUN chmod +x /app/start.sh
 
 # Set environment variables for runtime
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+ENV RAILWAY_PUBLIC_DOMAIN=${RAILWAY_PUBLIC_DOMAIN:-localhost}
 
 # Expose ports for both frontend and backend
 EXPOSE 8000

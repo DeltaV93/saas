@@ -6,10 +6,23 @@ const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 const getBackendUrl = () => {
   // For the browser, we can only use NEXT_PUBLIC_ variables
   if (typeof window !== 'undefined') {
-    // These were set at build time and inlined into the bundle
-    return process.env.NEXT_PUBLIC_BACKEND_URL || 
-           process.env.NEXT_PUBLIC_API_URL || 
-           'http://localhost:8000/';
+    // Get the current hostname and protocol
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    // If we're in production and the environment variables are set, use them
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+      return process.env.NEXT_PUBLIC_BACKEND_URL;
+    }
+    
+    // If we're in production and no environment variables are set, use the current domain
+    if (process.env.NODE_ENV === 'production') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+    }
+    
+    // Default to localhost for development
+    return 'http://localhost:8000';
   }
   
   // On the server we can use any env var
@@ -17,7 +30,7 @@ const getBackendUrl = () => {
          process.env.API_URL || 
          process.env.NEXT_PUBLIC_BACKEND_URL ||
          process.env.NEXT_PUBLIC_API_URL ||
-         'http://localhost:8000/';
+         'http://localhost:8000';
 };
 
 const mockData: { [key: string]: any } = {

@@ -1,10 +1,6 @@
-
 /** @type {import('next').NextConfig} */
-const { publicRuntimeConfig } = require('./env');
-
 const nextConfig = {
     reactStrictMode: true,
-    publicRuntimeConfig,
     // Disable TypeScript type checking during build to allow deployment
     typescript: {
       // !! WARN !!
