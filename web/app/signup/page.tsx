@@ -1,14 +1,51 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation'
 import { apiClient } from '../../utils/apiClient';
 import Link from 'next/link';
+import type { GoogleCredentialResponse } from '@/types/google';
+
+interface SignupFormData {
+  email: string;
+  password: string;
+}
+
+interface SignupResponse {
+  success: boolean;
+  message?: string;
+}
+
+interface GoogleSignupResponse {
+  statusCode: number;
+  message?: string;
+}
 
 const SignupPage = () => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<SignupFormData>();
   const router = useRouter();
+
+  const handleGoogleCallback = useCallback((response: GoogleCredentialResponse) => {
+    const token = response.credential;
+    apiClient('/auth/google-signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as GoogleSignupResponse;
+        }
+        return response as GoogleSignupResponse;
+      })
+      .then((data) => {
+        if (data.statusCode <= 200) {
+          router.push('/select-plan');
+        }
+      });
+  }, [router]);
 
   useEffect(() => {
     // Load Google API script
@@ -18,44 +55,45 @@ const SignupPage = () => {
     document.body.appendChild(script);
     script.onload = () => {
       // Initialize Google Sign-In
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button'),
-        { theme: 'outline', size: 'large' }
-      );
+      if (window.google?.accounts?.id) {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!clientId) {
+          console.error('Google Client ID is not defined');
+          return;
+        }
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCallback,
+        });
+        const buttonElement = document.getElementById('google-signin-button');
+        if (buttonElement) {
+          window.google.accounts.id.renderButton(
+            buttonElement,
+            { theme: 'outline', size: 'large' }
+          );
+        }
+      }
     };
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [handleGoogleCallback]);
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: SignupFormData) => {
     apiClient('/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: data.email, password: data.password }),
     })
-      .then((response: any) => response.json())
+      .then(async (response) => {
+        if (response instanceof Response) {
+          const data = await response.json();
+          return data as SignupResponse;
+        }
+        return response as SignupResponse;
+      })
       .then(() => {
         router.push('/verify-email?from=signup');
-      });
-  };
-
-  const handleGoogleCallback = (response: any) => {
-    const token = response.credential;
-    apiClient('/auth/google-signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    })
-      .then((response: any) => response.json())
-      .then((data) => {
-        if (data.statusCode <= 200) {
-          router.push('/select-plan');
-        }
       });
   };
 
