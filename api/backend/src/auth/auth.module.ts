@@ -5,9 +5,32 @@ import { AuthController } from './auth.controller';
 import * as session from 'express-session';
 import { RedisStore } from 'connect-redis';
 import Redis from 'ioredis';
+import { logError } from '../utils/logging.helper';
 
-const redisClient = new Redis(process.env.REDIS_URL);
+// Configure Redis client with fallback options and error handling
+const redisOptions = {
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  maxRetriesPerRequest: 3,
+  enableOfflineQueue: false,
+};
 
+// Try to use REDIS_URL if available, otherwise use options
+const redisClient = process.env.REDIS_URL 
+  ? new Redis(process.env.REDIS_URL)
+  : new Redis(redisOptions);
+
+// Handle Redis connection errors
+redisClient.on('error', (error) => {
+  logError('Redis connection error in auth module', error);
+  // Don't crash the application on Redis connection errors
+});
+
+// Create Redis store for sessions
 const redisStore = new RedisStore({
   client: redisClient,
   prefix: 'myapp:',
@@ -25,21 +48,26 @@ const redisStore = new RedisStore({
 })
 export class AuthModule {
   configure(consumer: MiddlewareConsumer) {
+    // Use memory store as fallback if Redis is not available
+    const sessionOptions = {
+      secret: process.env.SESSION_SECRET || 'fallback_secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 1000 * 60 * 60 * 24, // 1 day expiration
+      },
+    };
+
+    // Only use Redis store if Redis is connected
+    if (redisClient.status === 'ready') {
+      sessionOptions['store'] = redisStore;
+    }
+
     consumer
-      .apply(
-        session({
-          store: redisStore,
-          secret: process.env.SESSION_SECRET,
-          resave: false,
-          saveUninitialized: false,
-          cookie: {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 1000 * 60 * 60 * 24, // 1 day expiration
-          },
-        })
-      )
+      .apply(session(sessionOptions))
       .forRoutes('*');
   }
 }
