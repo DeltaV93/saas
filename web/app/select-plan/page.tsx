@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../utils/apiClient';
+import { useRouter } from 'next/navigation';
 
 const stripePromise = loadStripe('your-publishable-key-here');
 
