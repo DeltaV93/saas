@@ -2,15 +2,23 @@ import getConfig from 'next/config';
 
 const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 
-// Get backend URL from runtime config
+// Get backend URL from runtime config or environment variables
 const getBackendUrl = () => {
-  const { publicRuntimeConfig } = getConfig();
-  const url = publicRuntimeConfig?.backendUrl;
+  // First try to get from Next.js runtime config
+  const runtimeConfig = getConfig();
+  const configUrl = runtimeConfig?.publicRuntimeConfig?.backendUrl;
+  
+  // Then try environment variables directly (fallback)
+  const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+  
+  const url = configUrl || envUrl;
   
   if (!url) {
-    console.error('Backend URL is not configured in environment variables');
-    throw new Error('Backend URL is not configured');
+    console.warn('Backend URL is not configured, using default');
+    // Use a default for development
+    return 'http://localhost:8000/'; 
   }
+  
   // Ensure URL ends with a slash
   return url.endsWith('/') ? url : `${url}/`;
 };
@@ -101,10 +109,11 @@ export const apiClient = async (endpoint: string, options?: RequestInit) => {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
   try {
+    console.log(`Making request to: ${backendUrl}${cleanEndpoint}`);
     const response = await fetch(`${backendUrl}${cleanEndpoint}`, options);
     return response;
   } catch (error) {
     console.error('API request failed:', error);
     throw new Error(`Failed to make request to ${backendUrl}${cleanEndpoint}`);
   }
-}; 
+};

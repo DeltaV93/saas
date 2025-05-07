@@ -23,6 +23,24 @@ check_service() {
     return 1
 }
 
+# Debug: print environment variables
+echo "NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"
+echo "NEXT_PUBLIC_BACKEND_URL: $NEXT_PUBLIC_BACKEND_URL"
+echo "RAILWAY_PUBLIC_DOMAIN: $RAILWAY_PUBLIC_DOMAIN"
+
+# Set default backend URL if not provided
+if [ -z "$NEXT_PUBLIC_BACKEND_URL" ] && [ -z "$NEXT_PUBLIC_API_URL" ]; then
+    if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+        export NEXT_PUBLIC_BACKEND_URL="https://$RAILWAY_PUBLIC_DOMAIN"
+        export NEXT_PUBLIC_API_URL="https://$RAILWAY_PUBLIC_DOMAIN"
+        echo "Set NEXT_PUBLIC_BACKEND_URL to: $NEXT_PUBLIC_BACKEND_URL"
+    else
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:8000"
+        export NEXT_PUBLIC_API_URL="http://localhost:8000"
+        echo "Set NEXT_PUBLIC_BACKEND_URL to default: $NEXT_PUBLIC_BACKEND_URL"
+    fi
+fi
+
 # Start the backend service in the background
 echo "Starting backend service..."
 cd /app/api/backend
@@ -38,7 +56,8 @@ fi
 # Start the frontend service
 echo "Starting frontend service..."
 cd /app/web
-PORT=3000 npm run start &
+# Pass environment variables directly to the frontend start command
+PORT=3000 NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL npm run start &
 FRONTEND_PID=$!
 
 # Wait for frontend to be ready
@@ -54,4 +73,4 @@ trap 'kill $BACKEND_PID $FRONTEND_PID; exit' SIGTERM SIGINT
 wait -n
 
 # Exit with status of process that exited first
-exit $? 
+exit $?
