@@ -51,8 +51,13 @@ async function bootstrap() {
     // Enable CORS
     app.enableCors({
       origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:3000', 'http://localhost:3001'],
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      credentials: false,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Date', 'X-Api-Version'],
+      exposedHeaders: ['X-Api-Version', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset', 'X-CSRF-Token'],
+      maxAge: 600,
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
     });
 
     app.use(pino({
