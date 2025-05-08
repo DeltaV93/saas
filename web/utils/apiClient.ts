@@ -22,7 +22,9 @@ const getBackendUrl = () => {
     
     // If we're in production and no environment variables are set, use the current domain
     if (process.env.NODE_ENV === 'production') {
-      return `${protocol}//${hostname}${port ? `:${port}` : ''}/`;
+      console.log('Production environment detected no environment variables set, using current domain');
+      // return `${protocol}//${hostname}${port ? `:${port}` : ''}/`;
+      return 'https://saas-production-a504.up.railway.app/';
     }
     
     // Default to localhost for development
