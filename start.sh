@@ -32,11 +32,11 @@ echo "RAILWAY_PUBLIC_DOMAIN: $RAILWAY_PUBLIC_DOMAIN"
 if [ -z "$NEXT_PUBLIC_BACKEND_URL" ] && [ -z "$NEXT_PUBLIC_API_URL" ]; then
     if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
         # Ensure URLs end with port 8000 and a slash
-        export NEXT_PUBLIC_BACKEND_URL="https://$RAILWAY_PUBLIC_DOMAIN:8000/"
-        export NEXT_PUBLIC_API_URL="https://$RAILWAY_PUBLIC_DOMAIN:8000/"
+        export NEXT_PUBLIC_BACKEND_URL="https://$NEXT_PUBLIC_BACKEND_URL"
+        export NEXT_PUBLIC_API_URL="https://$NEXT_PUBLIC_BACKEND_URL"
         echo "Set NEXT_PUBLIC_BACKEND_URL to: $NEXT_PUBLIC_BACKEND_URL"
     else
-        export NEXT_PUBLIC_BACKEND_URL="http://localhost:8000/"
+        export NEXT_PUBLIC_BACKEND_URL="http://NEXT_PUBLIC_BACKEND_URL/"
         export NEXT_PUBLIC_API_URL="http://localhost:8000/"
         echo "Set NEXT_PUBLIC_BACKEND_URL to default: $NEXT_PUBLIC_BACKEND_URL"
     fi
