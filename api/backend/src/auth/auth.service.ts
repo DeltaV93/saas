@@ -92,4 +92,91 @@ export class AuthService {
     }
     return data.user;
   }
+
+  async forgotPassword(email: string): Promise<any> {
+    try {
+      const redirectUrl = `${process.env.FRONTEND_URL}/confirm-password`;
+      console.log(`Setting up password reset redirect to: ${redirectUrl}`);
+      
+      // Set the redirect URL for the password reset
+      const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      
+      console.log('Password reset initiated:', { hasData: !!data, hasError: !!error });
+      
+      if (error) {
+        console.error('Error sending reset password email:', error);
+        return errorResponse(error.message);
+      }
+      
+      return successResponse({ message: 'Password reset link sent successfully' });
+    } catch (error) {
+      console.error('Error in forgotPassword:', error);
+      return errorResponse('Failed to send password reset link');
+    }
+  }
+
+  async updateUser({ password }: { password: string }): Promise<any> {
+    try {
+      console.log('Updating user password');
+      
+      // Use the current session to update the password
+      const { data, error } = await this.supabase.auth.updateUser({
+        password: password
+      });
+      
+      if (error) {
+        console.error('Error updating password:', error);
+        return errorResponse(`Failed to update password: ${error.message}`);
+      }
+      
+      return successResponse({ message: 'Password updated successfully', user: data.user });
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      return errorResponse('Failed to update password');
+    }
+  }
+
+  async resetPassword(token: string, password: string, refreshToken?: string): Promise<any> {
+    try {
+      console.log('Attempting to reset password with token', token, refreshToken ? refreshToken : 'no refresh token');
+  
+      // Set the session using the access token
+      const sessionData: {
+        access_token: string;
+        refresh_token?: string;
+      } = {
+        access_token: token,
+      };
+      
+      // Add refresh token if available
+      if (refreshToken) {
+        sessionData.refresh_token = refreshToken;
+      }
+      
+      const { data, error } = await this.supabase.auth.setSession(sessionData);
+  
+      if (error) {
+        console.error('Error setting session:', error);
+        return errorResponse('Failed to set session with provided token');
+      }
+  
+      // Update the user's password
+      const { data: updateData, error: updateError } = await this.supabase.auth.updateUser({
+        password: password,
+      });
+  
+      if (updateError) {
+        console.error('Error updating password:', updateError);
+        return errorResponse(`Failed to update password: ${updateError.message}`);
+      }
+  
+      return successResponse({ message: 'Password reset successfully', user: updateData.user });
+    } catch (error) {
+      console.error('Error in resetPassword:', error);
+      return errorResponse('Failed to reset password');
+    }
+  }
 }
+  

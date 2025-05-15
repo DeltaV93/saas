@@ -2,7 +2,6 @@ import { Controller, Post, Body, UseGuards, Req, Get, Put } from '@nestjs/common
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt/jwt.guard';
-import { validateSessionAndPermissions } from '../utils/authentication.helper';
 import { successResponse, errorResponse } from '../utils/api-response.helper';
 
 @Controller('auth')
@@ -78,5 +77,63 @@ export class AuthController {
       }
     });
     return successResponse({ message: 'Logout successful' });
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    try {
+      if (!email) {
+        return errorResponse('Email is required');
+      }
+      
+      return this.authService.forgotPassword(email);
+    } catch (error) {
+      console.error('Error in forgotPassword endpoint:', error);
+      return errorResponse('Failed to process forgot password request');
+    }
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('password') password: string,
+    @Body('token') token: string,
+    @Body('refreshToken') refreshToken: string,
+    @Req() req: Request
+  ) {
+    try {
+      if (!password) {
+        return errorResponse('Password is required');
+      }
+      
+      if (!token) {
+        return errorResponse('Reset token is required');
+      }
+      
+      // Validate password requirements
+      if (password.length < 8) {
+        return errorResponse('Password must be at least 8 characters long');
+      }
+      
+      if (!/[A-Z]/.test(password)) {
+        return errorResponse('Password must contain at least one uppercase letter');
+      }
+      
+      if (!/[a-z]/.test(password)) {
+        return errorResponse('Password must contain at least one lowercase letter');
+      }
+      
+      if (!/[0-9]/.test(password)) {
+        return errorResponse('Password must contain at least one number');
+      }
+      
+      if (!/[!@#$%^&*]/.test(password)) {
+        return errorResponse('Password must contain at least one special character');
+      }
+      
+      return this.authService.resetPassword(token, password, refreshToken);
+    } catch (error) {
+      console.error('Error in resetPassword endpoint:', error);
+      return errorResponse('Failed to reset password');
+    }
   }
 }

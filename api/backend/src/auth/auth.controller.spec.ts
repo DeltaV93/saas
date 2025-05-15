@@ -58,6 +58,14 @@ const mockAuthService = {
     name: 'Updated Name',
     role: 'user',
   }),
+  forgotPassword: jest.fn().mockResolvedValue({
+    status: 'success',
+    data: { message: 'Password reset link sent successfully' }
+  }),
+  resetPassword: jest.fn().mockResolvedValue({
+    status: 'success',
+    data: { message: 'Password reset successfully' }
+  }),
 };
 
 describe('AuthController', () => {
@@ -86,9 +94,7 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     (successResponse as jest.Mock).mockImplementation((data) => ({ status: 'success', data }));
-    (errorResponse as jest.Mock).mockImplementation((message) => {
-      throw { statusCode: 400, message };
-    });
+    (errorResponse as jest.Mock).mockImplementation((message) => ({ status: 'error', message }));
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -158,8 +164,8 @@ describe('AuthController', () => {
       
       jest.spyOn(authService, 'validateUser').mockResolvedValueOnce(null);
       
-      await expect(controller.login(email, password, req as express.Request))
-        .rejects.toEqual({ statusCode: 400, message: 'Invalid credentials' });
+      const result = await controller.login(email, password, req as express.Request);
+      expect(result).toEqual({ status: 'error', message: 'Invalid credentials' });
     });
   });
 
@@ -215,6 +221,67 @@ describe('AuthController', () => {
       const result = await controller.logout(req as express.Request);
       expect(req.session.destroy).toHaveBeenCalled();
       expect(result).toEqual({ status: 'success', data: { message: 'Logout successful' } });
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('should call service.forgotPassword with correct parameters', async () => {
+      const email = 'test@example.com';
+      
+      await controller.forgotPassword(email);
+      expect(authService.forgotPassword).toHaveBeenCalledWith(email);
+    });
+
+    it('should return error when email is not provided', async () => {
+      const result = await controller.forgotPassword(null);
+      expect(result).toEqual({ status: 'error', message: 'Email is required' });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should call service.resetPassword with correct parameters', async () => {
+      const token = 'reset-token';
+      const password = 'new-password';
+      
+      const req = {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      } as any;
+      
+      await controller.resetPassword(password, req);
+      expect(authService.resetPassword).toHaveBeenCalledWith(token, password);
+    });
+
+    it('should return error when password is not provided', async () => {
+      const req = {
+        headers: {
+          authorization: 'Bearer token'
+        }
+      } as any;
+      
+      const result = await controller.resetPassword(null, req);
+      expect(result).toEqual({ status: 'error', message: 'Password is required' });
+    });
+    
+    it('should return error when authorization header is missing', async () => {
+      const req = {
+        headers: {}
+      } as any;
+      
+      const result = await controller.resetPassword('password', 'token', 'refreshToken');
+      expect(result).toEqual({ status: 'error', message: 'Invalid or missing authentication token' });
+    });
+    
+    it('should return error when authorization header format is invalid', async () => {
+      const req = {
+        headers: {
+          authorization: 'InvalidFormat token'
+        }
+      } as any;
+      
+      const result = await controller.resetPassword('password', 'token', 'refreshToken');
+      expect(result).toEqual({ status: 'error', message: 'Invalid or missing authentication token' });
     });
   });
 });

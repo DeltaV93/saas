@@ -20,12 +20,57 @@ const ConfirmPasswordContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    // Check for hash fragment first (for recovery flow)
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      console.log('Raw hash:', hash);
+      
+      if (hash && hash.includes('access_token=')) {
+        // Parse the access_token from the hash
+        const hashParams = new URLSearchParams(hash.substring(1)); // Remove the # character
+        console.log('Parsed hash params:', Object.fromEntries(hashParams.entries()));
+        
+        const accessToken = hashParams.get('access_token');
+        let refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        // Manual parsing for refresh_token if URLSearchParams fails
+        if (!refreshToken && hash.includes('refresh_token=')) {
+          const refreshTokenMatch = hash.match(/refresh_token=([^&]+)/);
+          if (refreshTokenMatch && refreshTokenMatch[1]) {
+            refreshToken = refreshTokenMatch[1];
+            console.log('Manually extracted refresh token:', refreshToken);
+          }
+        }
+        
+        console.log('Hash params:', { 
+          type, 
+          accessToken: accessToken ? `${accessToken.substring(0, 10)}...` : 'null', 
+          refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'null' 
+        });
+        
+        if (accessToken) {
+          setToken(accessToken);
+          if (refreshToken) {
+            setRefreshToken(refreshToken);
+          }
+          return;
+        }
+      }
+    }
+    
+    // Fall back to query params (for other flows)
     if (searchParams) {
       setToken(searchParams.get('token'));
+      setRefreshToken(searchParams.get('refresh_token'));
     }
   }, [searchParams]);
 
@@ -39,16 +84,29 @@ const ConfirmPasswordContent = () => {
 
   const onSubmit = (data: PasswordFormData) => {
     if (!token) {
-      console.error('Reset token is missing');
+      setError('Reset token is missing. Please request a new password reset link.');
       return;
     }
 
+    // Only check for refreshToken if we're in a flow that requires it
+    // For some auth flows, refreshToken might not be needed
+    if (window.location.hash.includes('refresh_token=') && !refreshToken) {
+      setError('Refresh token is missing. Please request a new password reset link.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     apiClient('/auth/reset-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ 
         password: data.password,
-        token: token 
+        token: token,
+        ...(refreshToken && { refreshToken })
       }),
     })
       .then(async (response) => {
@@ -59,15 +117,20 @@ const ConfirmPasswordContent = () => {
         return response as ResetPasswordResponse;
       })
       .then((result) => {
+        setLoading(false);
         if (result.success) {
-          router.push('/login');
-          console.log('Password reset successfully');
+          setSuccess(true);
+          setTimeout(() => {
+            router.push('/login?message=password-reset-success');
+          }, 2000);
         } else {
-          console.error('Failed to reset password');
+          setError(result.message || 'Failed to reset password. Please try again.');
         }
       })
       .catch((error) => {
+        setLoading(false);
         console.error('Error resetting password:', error);
+        setError('An unexpected error occurred. Please try again or request a new reset link.');
       });
   };
 
@@ -84,6 +147,19 @@ const ConfirmPasswordContent = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md max-w-md w-full">
         <h2 className="text-2xl font-bold mb-6 text-center">Create New Password</h2>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            Password reset successful! Redirecting to login...
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -156,9 +232,10 @@ const ConfirmPasswordContent = () => {
 
           <button 
             type="submit" 
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            disabled={loading || success}
+            className={`w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${(loading || success) ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Reset Password
+            {loading ? 'Resetting Password...' : 'Reset Password'}
           </button>
         </form>
       </div>

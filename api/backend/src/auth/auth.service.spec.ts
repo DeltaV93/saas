@@ -65,6 +65,8 @@ describe('AuthService', () => {
       auth: {
         signUp: jest.fn(),
         signInWithPassword: jest.fn(),
+        resetPasswordForEmail: jest.fn(),
+        updateUser: jest.fn()
       },
       from: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
@@ -749,6 +751,100 @@ describe('AuthService', () => {
       
       const result = await service.updateUserProfile(userId, largeUpdate);
       expect(result).toHaveProperty('bio', largeUpdate.bio);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('should successfully send a password reset email', async () => {
+      const email = 'test@example.com';
+      
+      mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
+        data: {},
+        error: null,
+      });
+      
+      process.env.FRONTEND_URL = 'http://localhost:3000';
+      
+      const result = await service.forgotPassword(email);
+      expect(mockSupabaseClient.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+        email,
+        { redirectTo: 'http://localhost:3000/confirm-password' }
+      );
+      expect(successResponse).toHaveBeenCalledWith({ message: 'Password reset link sent successfully' });
+    });
+    
+    it('should handle errors when sending password reset email', async () => {
+      const email = 'test@example.com';
+      
+      mockSupabaseClient.auth.resetPasswordForEmail.mockResolvedValue({
+        data: {},
+        error: { message: 'User not found' },
+      });
+      
+      const result = await service.forgotPassword(email);
+      expect(errorResponse).toHaveBeenCalledWith('User not found');
+    });
+    
+    it('should handle exceptions during password reset email sending', async () => {
+      const email = 'test@example.com';
+      
+      mockSupabaseClient.auth.resetPasswordForEmail.mockRejectedValue(new Error('Network error'));
+      
+      const result = await service.forgotPassword(email);
+      expect(errorResponse).toHaveBeenCalledWith('Failed to send password reset link');
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should successfully reset a user password', async () => {
+      const token = 'reset-token';
+      const password = 'new-password';
+      
+      mockSupabaseClient.auth.updateUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null,
+      });
+      
+      const result = await service.resetPassword(token, password);
+      expect(mockSupabaseClient.auth.updateUser).toHaveBeenCalledWith({ password });
+      expect(successResponse).toHaveBeenCalledWith({ message: 'Password reset successfully' });
+    });
+    
+    it('should handle errors when resetting password', async () => {
+      const token = 'reset-token';
+      const password = 'new-password';
+      
+      mockSupabaseClient.auth.updateUser.mockResolvedValue({
+        data: {},
+        error: { message: 'Invalid reset token' },
+      });
+      
+      const result = await service.resetPassword(token, password);
+      expect(errorResponse).toHaveBeenCalledWith('Invalid reset token');
+    });
+    
+    it('should handle exceptions during password reset', async () => {
+      const token = 'reset-token';
+      const password = 'new-password';
+      
+      mockSupabaseClient.auth.updateUser.mockRejectedValue(new Error('Network error'));
+      
+      const result = await service.resetPassword(token, password);
+      expect(errorResponse).toHaveBeenCalledWith('Failed to reset password');
+    });
+    
+    // Security test
+    it('should handle password complexity requirements during reset', async () => {
+      const token = 'reset-token';
+      const weakPassword = '123';
+      
+      mockSupabaseClient.auth.updateUser.mockResolvedValue({
+        data: {},
+        error: { message: 'Password must be at least 8 characters' },
+      });
+      
+      const result = await service.resetPassword(token, weakPassword);
+      expect(errorResponse).toHaveBeenCalledWith('Password must be at least 8 characters');
     });
   });
 });

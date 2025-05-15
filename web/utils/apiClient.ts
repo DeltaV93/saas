@@ -2,44 +2,15 @@ import getConfig from 'next/config';
 
 const IS_MOCK_DATA = process.env.NEXT_PUBLIC_IS_MOCK_DATA === 'true';
 
-// Get backend URL from runtime config or environment variables
+/**
+ * Returns the backend URL for API requests.
+ * Uses NEXT_PUBLIC_BACKEND_URL from environment variables, falling back to localhost for development.
+ * Ensures the URL ends with a slash for consistency.
+ * @returns {string} The backend base URL
+ */
 const getBackendUrl = () => {
-  // For the browser, we can only use NEXT_PUBLIC_ variables
-  if (typeof window !== 'undefined') {
-    // Get the current hostname and protocol
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    
-    // If we're in production and the environment variables are set, use them
-    if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-      // Ensure the URL ends with a slash
-      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL.endsWith('/') 
-        ? process.env.NEXT_PUBLIC_BACKEND_URL 
-        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/`;
-      return baseUrl;
-    }
-    
-    // If we're in production and no environment variables are set, use the current domain
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Production environment detected no environment variables set, using current domain');
-      // return `${protocol}//${hostname}${port ? `:${port}` : ''}/`;
-      return 'https://saas-production-a504.up.railway.app/';
-    }
-    
-    // Default to localhost for development
-    return 'http://localhost:8000/';
-  }
-  
-  // On the server we can use any env var
-  const serverUrl = process.env.BACKEND_URL || 
-         process.env.API_URL || 
-         process.env.NEXT_PUBLIC_BACKEND_URL ||
-         process.env.NEXT_PUBLIC_API_URL ||
-         'http://localhost:8000/';
-         
-  // Ensure the URL ends with a slash
-  return serverUrl.endsWith('/') ? serverUrl : `${serverUrl}/`;
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000/';
+  return url.endsWith('/') ? url : `${url}/`;
 };
 
 const mockData: { [key: string]: any } = {
@@ -123,13 +94,26 @@ export const apiClient = async (endpoint: string, options?: RequestInit) => {
     });
   }
 
+  console.log('options', options);
   const backendUrl = getBackendUrl();
   // Remove leading slash from endpoint if it exists
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
   try {
-    console.log(`Making request to: ${backendUrl}${cleanEndpoint}`);
-    const response = await fetch(`${backendUrl}${cleanEndpoint}`, options);
+    console.log(`Making ${options?.method || 'GET'} request to: ${backendUrl}${cleanEndpoint}`);    
+    
+    // Ensure default headers are set
+    const defaultOptions: RequestInit = {
+      credentials: 'include', // Important for cookies/sessions
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      ...options,
+    };
+    console.log('defaultOptions', defaultOptions);
+    console.log('backendUrl', backendUrl);
+    console.log('cleanEndpoint', cleanEndpoint);
+    const response = await fetch(`${backendUrl}${cleanEndpoint}`, defaultOptions);
     return response;
   } catch (error) {
     console.error('API request failed:', error);
