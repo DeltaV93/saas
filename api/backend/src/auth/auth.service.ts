@@ -103,7 +103,6 @@ export class AuthService {
         redirectTo: redirectUrl,
       });
       
-      console.log('Password reset initiated:', { hasData: !!data, hasError: !!error });
       
       if (error) {
         console.error('Error sending reset password email:', error);
@@ -140,7 +139,7 @@ export class AuthService {
 
   async resetPassword(token: string, password: string, refreshToken?: string): Promise<any> {
     try {
-      console.log('Attempting to reset password with token', token, refreshToken ? refreshToken : 'no refresh token');
+      console.log('Attempting to reset password with token');
   
       // Set the session using the access token
       const sessionData: {
