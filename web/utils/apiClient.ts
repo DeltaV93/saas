@@ -13,6 +13,28 @@ const getBackendUrl = () => {
   return url.endsWith('/') ? url : `${url}/`;
 };
 
+// Helper function to get the JWT token from localStorage
+const getAuthToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('auth_token');
+  }
+  return null;
+};
+
+// Helper function to set the JWT token in localStorage
+export const setAuthToken = (token: string): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('auth_token', token);
+  }
+};
+
+// Helper function to remove the JWT token from localStorage
+export const removeAuthToken = (): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth_token');
+  }
+};
+
 const mockData: { [key: string]: any } = {
   '/auth/signup': { success: true, user: { name: 'New User', role: 'user' } },
   '/auth/login': { success: true, token: 'mock-jwt-token' },
@@ -102,14 +124,28 @@ export const apiClient = async (endpoint: string, options?: RequestInit) => {
   try {
     console.log(`Making ${options?.method || 'GET'} request to: ${backendUrl}${cleanEndpoint}`);    
     
+    // Get auth token
+    const token = getAuthToken();
+    
+    // Prepare headers with auth token if available
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     // Ensure default headers are set
     const defaultOptions: RequestInit = {
       credentials: 'include', // Important for cookies/sessions
       headers: {
-        'Content-Type': 'application/json',
+        ...headers,
+        ...(options?.headers || {}),
       },
       ...options,
     };
+    
     console.log('defaultOptions', defaultOptions);
     console.log('backendUrl', backendUrl);
     console.log('cleanEndpoint', cleanEndpoint);

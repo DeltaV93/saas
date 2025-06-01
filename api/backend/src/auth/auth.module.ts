@@ -6,6 +6,8 @@ import * as session from 'express-session';
 import { RedisStore } from 'connect-redis';
 import Redis from 'ioredis';
 import { logError } from '../utils/logging.helper';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './jwt.strategy';
 
 // Configure Redis client with fallback options and error handling
 const redisOptions = {
@@ -40,13 +42,15 @@ const redisStore = new RedisStore({
 
 @Module({
   imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '60m' },
     }),
   ],
-  providers: [AuthService],
-  controllers: [AuthController]
+  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
+  exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {
   configure(consumer: MiddlewareConsumer) {

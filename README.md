@@ -135,7 +135,7 @@ pnpm test
 
 - [Frontend Documentation](/web/README.md)
 - [Backend Documentation](/api/backend/README.md)
-- [API Documentation](http://localhost:3001/api) (available when backend is running)
+- [API Documentation](http://localhost:3000/api) (available when backend is running)
 
 ## 🤝 Contributing
 
@@ -154,3 +154,9 @@ TBD
 ## 🆘 Support
 
 TBD
+
+## 🧪 Todo List 
+- Implement proper CSRF protection
+    - Backend generating tokens
+    - Frontend including tokens in requests
+    - Cookie management across domains

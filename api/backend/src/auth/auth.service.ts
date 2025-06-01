@@ -12,7 +12,7 @@ export class AuthService {
   );
   private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-  constructor(private jwtService: JwtService) {}
+  constructor(private jwtService: JwtService) { }
 
   async signup(email: string, password: string): Promise<User> {
     const { data, error } = await this.supabase.auth.signUp({ email, password });
@@ -21,12 +21,21 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    const payload = { email: data.user.email, sub: data.user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
+      
+      const payload = { email: data.user.email, sub: data.user.id };
+      const access_token = this.jwtService.sign(payload);
+      
+      return successResponse({
+        user: data.user,
+        access_token
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      return errorResponse('Invalid credentials');
+    }
   }
 
   async googleSignup(token: string): Promise<any> {
@@ -97,18 +106,18 @@ export class AuthService {
     try {
       const redirectUrl = `${process.env.FRONTEND_URL}/confirm-password`;
       console.log(`Setting up password reset redirect to: ${redirectUrl}`);
-      
+
       // Set the redirect URL for the password reset
       const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
-      
-      
+
+
       if (error) {
         console.error('Error sending reset password email:', error);
         return errorResponse(error.message);
       }
-      
+
       return successResponse({ message: 'Password reset link sent successfully' });
     } catch (error) {
       console.error('Error in forgotPassword:', error);
@@ -119,17 +128,17 @@ export class AuthService {
   async updateUser({ password }: { password: string }): Promise<any> {
     try {
       console.log('Updating user password');
-      
+
       // Use the current session to update the password
       const { data, error } = await this.supabase.auth.updateUser({
         password: password
       });
-      
+
       if (error) {
         console.error('Error updating password:', error);
         return errorResponse(`Failed to update password: ${error.message}`);
       }
-      
+
       return successResponse({ message: 'Password updated successfully', user: data.user });
     } catch (error) {
       console.error('Error in updateUser:', error);
@@ -140,37 +149,32 @@ export class AuthService {
   async resetPassword(token: string, password: string, refreshToken?: string): Promise<any> {
     try {
       console.log('Attempting to reset password with token');
-  
-      // Set the session using the access token
-      const sessionData: {
-        access_token: string;
-        refresh_token?: string;
-      } = {
-        access_token: token,
-      };
-      
+
       // Add refresh token if available
       if (refreshToken) {
-        sessionData.refresh_token = refreshToken;
+        
+        // Only call setSession when both tokens are available
+        const { data, error } = await this.supabase.auth.setSession({
+          access_token: token,
+          refresh_token: refreshToken
+        });
+
+        if (error) {
+          console.error('Error setting session:', error);
+          return errorResponse('Failed to set session with provided token');
+        }
       }
-      
-      const { data, error } = await this.supabase.auth.setSession(sessionData);
-  
-      if (error) {
-        console.error('Error setting session:', error);
-        return errorResponse('Failed to set session with provided token');
-      }
-  
+
       // Update the user's password
       const { data: updateData, error: updateError } = await this.supabase.auth.updateUser({
         password: password,
       });
-  
+
       if (updateError) {
         console.error('Error updating password:', updateError);
         return errorResponse(`Failed to update password: ${updateError.message}`);
       }
-  
+
       return successResponse({ message: 'Password reset successfully', user: updateData.user });
     } catch (error) {
       console.error('Error in resetPassword:', error);
@@ -178,4 +182,3 @@ export class AuthService {
     }
   }
 }
-  

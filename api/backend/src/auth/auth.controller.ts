@@ -15,12 +15,24 @@ export class AuthController {
 
   @Post('login')
   async login(@Body('email') email: string, @Body('password') password: string, @Req() req: Request) {
-    const user = await this.authService.validateUser(email, password);
-    if (!user) {
+    try {
+      // Use the updated login method from auth service
+      const loginResult = await this.authService.login(email, password);
+      
+      // Store user in session if available
+      if (loginResult && loginResult.data && loginResult.data.user) {
+        req.session.user = { 
+          id: loginResult.data.user.id, 
+          role: loginResult.data.user.role 
+        };
+      }
+      
+      // Return the response with token
+      return loginResult;
+    } catch (error) {
+      console.error('Login error:', error);
       return errorResponse('Invalid credentials');
     }
-    req.session.user = { id: user.id, role: user.role };
-    return successResponse({ message: 'Login successful' });
   }
 
   @Post('google-signup')
@@ -38,6 +50,7 @@ export class AuthController {
         throw new Error('User not found in request');
       }
 
+      console.log('User from JWT token:', user);
       const userInfo = await this.authService.getUserInfo(user.id);
       return successResponse(userInfo);
     } catch (error) {

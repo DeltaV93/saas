@@ -35,22 +35,23 @@ async function bootstrap() {
     app.use(helmet());
 
     // Apply CSRF protection middleware (only if not in test mode)
-    if (process.env.NODE_ENV !== 'test') {
-      app.use(csurf({ cookie: true }));
-    }
+    // if (process.env.NODE_ENV !== 'test') {
+    //   app.use(csurf({ cookie: true }));
+    // }
 
     // Apply rate limiting middleware
     app.use(
       rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
+        max: 50, // limit each IP to 50 requests per windowMs
         message: 'Too many requests from this IP, please try again later.',
       })
     );
 
     // Enable CORS
     app.enableCors({
-      origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:3000', 'http://localhost:3001'],
+      // origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:3000', 'http://localhost:3001'],
+      origin: 'http://localhost:3000',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Date', 'X-Api-Version'],

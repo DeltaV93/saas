@@ -2,19 +2,30 @@
 
 import React, { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { apiClient } from '../../utils/apiClient';
+import { apiClient, removeAuthToken } from '../../utils/apiClient';
 import { User } from '../../types/api';
+import { useRouter } from 'next/navigation';
 
 const DashboardPage = () => {
   const { user, logout, setUser } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) {
       apiClient('/auth/me')
         .then(async (response) => {
           if (response instanceof Response) {
-            const data = await response.json();
-            return data as User;
+            if (response.ok) {
+              const responseData = await response.json();
+              return responseData.data || responseData;
+            } else {
+              // Handle unauthorized or other errors
+              if (response.status === 401) {
+                // Redirect to login page if unauthorized
+                router.push('/login');
+              }
+              throw new Error('Failed to fetch user data');
+            }
           }
           return response as User;
         })
@@ -22,9 +33,21 @@ const DashboardPage = () => {
           if (data) {
             setUser(data);
           }
+        })
+        .catch((error) => {
+          console.error('Error fetching user data:', error);
         });
     }
-  }, [user, setUser]);
+  }, [user, setUser, router]);
+
+  const handleLogout = () => {
+    // Clear the auth token
+    removeAuthToken();
+    // Clear user from store
+    logout();
+    // Redirect to login page
+    router.push('/login');
+  };
 
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -46,8 +69,8 @@ const DashboardPage = () => {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="rounded-lg h-96">
-              <h1 className="text-3xl font-bold mb-4">Welcome, {user.name}</h1>
-              <button onClick={logout} className="bg-red-500 text-white py-2 px-4 rounded-md">Logout</button>
+              <h1 className="text-3xl font-bold mb-4">Welcome, {user.name || user.email}</h1>
+              <button onClick={handleLogout} className="bg-red-500 text-white py-2 px-4 rounded-md">Logout</button>
               <div className="mt-6">
                 <h2 className="text-2xl mb-2">Your Data</h2>
                 <pre className="bg-white p-4 rounded-md shadow-md">{JSON.stringify(user, null, 2)}</pre>

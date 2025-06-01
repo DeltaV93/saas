@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/utils/apiClient';
+import { useAlerts } from '@/contexts/AlertContext'; 
 
 interface PasswordFormData {
   password: string;
@@ -23,9 +24,9 @@ const ConfirmPasswordContent = () => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { showAlert } = useAlerts();
 
   useEffect(() => {
     // Check for hash fragment first (for recovery flow)
@@ -84,19 +85,18 @@ const ConfirmPasswordContent = () => {
 
   const onSubmit = (data: PasswordFormData) => {
     if (!token) {
-      setError('Reset token is missing. Please request a new password reset link.');
+      showAlert('Reset token is missing. Please request a new password reset link.', 'error');
       return;
     }
 
     // Only check for refreshToken if we're in a flow that requires it
     // For some auth flows, refreshToken might not be needed
     if (window.location.hash.includes('refresh_token=') && !refreshToken) {
-      setError('Refresh token is missing. Please request a new password reset link.');
+      showAlert('Refresh token is missing. Please request a new password reset link.', 'error');
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     apiClient('/auth/reset-password', {
       method: 'POST',
@@ -120,17 +120,18 @@ const ConfirmPasswordContent = () => {
         setLoading(false);
         if (result.success) {
           setSuccess(true);
+          showAlert('Password reset successful!', 'success');
           setTimeout(() => {
             router.push('/login?message=password-reset-success');
           }, 2000);
         } else {
-          setError(result.message || 'Failed to reset password. Please try again.');
+          showAlert(result.message || 'Failed to reset password. Please try again.', 'error');
         }
       })
       .catch((error) => {
         setLoading(false);
         console.error('Error resetting password:', error);
-        setError('An unexpected error occurred. Please try again or request a new reset link.');
+        showAlert('An unexpected error occurred. Please try again or request a new reset link.', 'error');
       });
   };
 
@@ -147,12 +148,6 @@ const ConfirmPasswordContent = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md max-w-md w-full">
         <h2 className="text-2xl font-bold mb-6 text-center">Create New Password</h2>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
         
         {success && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">

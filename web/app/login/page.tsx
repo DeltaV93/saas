@@ -4,7 +4,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { apiClient } from '@/utils/apiClient';
+import { apiClient, setAuthToken } from '@/utils/apiClient';
+import { useAuthStore } from '@/store/authStore';
 
 interface LoginFormData {
   email: string;
@@ -15,11 +16,14 @@ interface LoginResponse {
   success: boolean;
   token?: string;
   message?: string;
+  statusCode?: number;
+  access_token?: string;
 }
 
 const LoginPage: React.FC = () => {
   const { register, handleSubmit } = useForm<LoginFormData>();
   const router = useRouter();
+  const { setUser } = useAuthStore();
 
   const onSubmit = (data: LoginFormData) => {
     apiClient('/auth/login', {
@@ -35,10 +39,35 @@ const LoginPage: React.FC = () => {
         return response as LoginResponse;
       })
       .then((result) => {
-        if (result.success) {
+        if (result.success || (result.statusCode && result.statusCode <= 200)) {
           console.log('Login successful');
-          // Handle successful login, e.g., redirect to dashboard
-          router.push('/dashboard');
+          
+          // Store the JWT token
+          if (result.token) {
+            setAuthToken(result.token);
+          } else if (result.access_token) {
+            setAuthToken(result.access_token);
+          }
+          
+          // Fetch user data after successful login
+          apiClient('/auth/me')
+            .then(async (response) => {
+              if (response instanceof Response) {
+                return await response.json();
+              }
+              return response;
+            })
+            .then((userData) => {
+              if (userData && userData.data) {
+                setUser(userData.data);
+              }
+              // Redirect to dashboard
+              router.push('/dashboard');
+            })
+            .catch(err => {
+              console.error('Failed to fetch user data:', err);
+              router.push('/dashboard');
+            });
         } else {
           console.error('Login failed');
         }
@@ -75,9 +104,9 @@ const LoginPage: React.FC = () => {
           <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md">Send Magic Link</button>
         </div>
         <div className="mt-4 text-center">
-          <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+          <a href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
             Forgot Password?
-          </Link>
+          </a>
         </div>
       </form>
     </div>
